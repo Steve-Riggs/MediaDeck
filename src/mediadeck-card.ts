@@ -15,19 +15,24 @@ import { renderAudioControls } from './ui/audio-controls';
 import { renderWatchActions } from './ui/watch-actions';
 import { renderDeviceInspector } from './ui/device-inspector';
 import { cardStyles } from './styles/card-styles';
+
 export class MediaDeckCard extends LitElement {
   static styles = cardStyles;
+
   @property({ attribute: false }) hass?: HomeAssistant;
   @state() private config?: NormalizedMediaDeckConfig;
   @state() private actionError?: string;
+
   setConfig(config: MediaDeckConfig) {
-    const v = validateConfig(config);
-    if (!v.valid) throw new Error(v.errors.join(' '));
+    const validation = validateConfig(config);
+    if (!validation.valid) throw new Error(validation.errors.join(' '));
     this.config = normalizeConfig(config);
   }
+
   getCardSize() {
     return this.config?.appearance.density === 'compact' ? 5 : 7;
   }
+
   getGridOptions() {
     return {
       columns: 12,
@@ -36,57 +41,86 @@ export class MediaDeckCard extends LitElement {
       min_rows: 3,
     };
   }
+
   static async getConfigElement() {
     await import('./mediadeck-editor');
     return document.createElement('mediadeck-editor');
   }
+
   static getStubConfig(): MediaDeckConfig {
     return { type: 'custom:mediadeck-card', entity: '' };
   }
+
   static async getEntitySuggestion(hass: HomeAssistant, entityId: string) {
     if (!entityId.startsWith('media_player.') || !hass.states[entityId]) return undefined;
     return { type: 'custom:mediadeck-card' as const, entity: entityId };
   }
-  private async run(i: MediaIntent) {
+
+  private async run(intent: MediaIntent) {
     if (!this.hass || !this.config) return;
-    const r = await executeIntent(this.hass, resolveMediaSession(this.hass, this.config), i);
-    this.actionError = r.ok ? undefined : (r.message ?? 'Media action failed.');
+    const result = await executeIntent(
+      this.hass,
+      resolveMediaSession(this.hass, this.config),
+      intent,
+    );
+    this.actionError = result.ok ? undefined : (result.message ?? 'Media action failed.');
   }
-  private section(n: RegionName, s: ReturnType<typeof resolveMediaSession>) {
-    if (!this.config?.regions[n]) return nothing;
-    switch (n) {
+
+  private section(region: RegionName, session: ReturnType<typeof resolveMediaSession>) {
+    if (!this.config?.regions[region]) return nothing;
+    switch (region) {
       case 'now_playing':
-        return renderNowPlaying(s, this.config);
+        return renderNowPlaying(session, this.config);
       case 'transport':
-        return renderTransportControls(s, (i) => void this.run(i));
+        return renderTransportControls(session, (intent) => void this.run(intent));
       case 'remote':
-        return renderRemoteControls(s, (i) => void this.run(i));
+        return renderRemoteControls(session, (intent) => void this.run(intent));
       case 'sources':
-        return renderSourceSelector(s, (i) => void this.run(i));
+        return renderSourceSelector(session, (intent) => void this.run(intent));
       case 'audio':
-        return renderAudioControls(s, (i) => void this.run(i));
+        return renderAudioControls(session, (intent) => void this.run(intent));
       case 'watch_actions':
-        return renderWatchActions(this.config, (i) => void this.run(i));
+        return renderWatchActions(this.config, (intent) => void this.run(intent));
       case 'inspector':
-        return renderDeviceInspector(s);
+        return renderDeviceInspector(session);
     }
   }
+
   protected render() {
     if (!this.config) return html`<div class="card notice">Configure MediaDeck to begin.</div>`;
     if (!this.hass) return html`<div class="card notice">Loading Home Assistant…</div>`;
+
     const primary = this.hass.states[this.config.entity];
-    if (!primary)
+    if (!primary) {
       return html`<div class="card notice">
         Media entity ${this.config.entity || '(not selected)'} was not found.
       </div>`;
-    const s = resolveMediaSession(this.hass, this.config);
-    const style = `--mediadeck-min-height:${this.config.appearance.min_height}px;--mediadeck-radius:${this.config.appearance.border_radius}px;--mediadeck-artwork:${this.config.appearance.artwork_size}px;--mediadeck-art-fit:${this.config.appearance.artwork_fit};--mediadeck-background:${this.config.appearance.background};--mediadeck-text:${this.config.appearance.text_color};--mediadeck-accent:${this.config.appearance.accent_color};--mediadeck-button:${this.config.appearance.button_background};--mediadeck-font-scale:${this.config.appearance.font_scale};opacity:${this.config.appearance.opacity}`;
-    const prim: RegionName[] = ['now_playing', 'transport'];
+    }
+
+    const session = resolveMediaSession(this.hass, this.config);
+    const appearance = this.config.appearance;
+    const style = [
+      `--mediadeck-min-height:${appearance.min_height}px`,
+      `--mediadeck-radius:${appearance.border_radius}px`,
+      `--mediadeck-artwork:${appearance.artwork_size}px`,
+      `--mediadeck-art-fit:${appearance.artwork_fit}`,
+      `--mediadeck-background:${appearance.background}`,
+      `--mediadeck-text:${appearance.text_color}`,
+      `--mediadeck-accent:${appearance.accent_color}`,
+      `--mediadeck-button:${appearance.button_background}`,
+      `--mediadeck-button-opacity:${appearance.button_opacity}`,
+      `--mediadeck-icon-size:${appearance.icon_size}px`,
+      `--mediadeck-font-scale:${appearance.font_scale}`,
+      `--mediadeck-gap:${appearance.gap}px`,
+      `opacity:${appearance.opacity}`,
+    ].join(';');
+    const primaryRegions: RegionName[] = ['now_playing', 'transport'];
+
     return html`<article class="card" style=${style}>
       <header class="header">
         <h1>${this.config.title ?? primary.attributes.friendly_name ?? 'MediaDeck'}</h1>
         <div>
-          <span class="status">${s.adapter.name}</span>
+          <span class="status">${session.adapter.name}</span>
           <button @click=${() => void this.run({ kind: 'power', on: primary.state === 'off' })}>
             ⏻
           </button>
@@ -95,13 +129,13 @@ export class MediaDeckCard extends LitElement {
       <div class="card-body">
         <div>
           ${this.config.section_order
-            .filter((n) => prim.includes(n))
-            .map((n) => this.section(n, s))}
+            .filter((region) => primaryRegions.includes(region))
+            .map((region) => this.section(region, session))}
         </div>
         <div>
           ${this.config.section_order
-            .filter((n) => !prim.includes(n))
-            .map((n) => this.section(n, s))}
+            .filter((region) => !primaryRegions.includes(region))
+            .map((region) => this.section(region, session))}
         </div>
       </div>
       ${this.actionError
