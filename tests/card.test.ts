@@ -85,4 +85,29 @@ describe('MediaDeck card', () => {
       card.shadowRoot?.querySelector('input[aria-label="Send text to Android TV"]'),
     ).not.toBeNull();
   });
+
+  test('applies configured gap, icon size and button opacity as card variables', async () => {
+    const card = document.createElement('mediadeck-card') as MediaDeckCard;
+    card.setConfig({
+      type: 'custom:mediadeck-card',
+      entity: 'media_player.tv',
+      appearance: {
+        gap: 22,
+        icon_size: 31,
+        button_opacity: 0.7,
+      },
+    });
+    card.hass = hass([
+      entity('media_player.tv', 'playing', {
+        friendly_name: 'TV',
+        supported_features: FEATURES,
+      }),
+    ]);
+    document.body.append(card);
+    await card.updateComplete;
+    const article = card.shadowRoot?.querySelector('article');
+    expect(article?.getAttribute('style')).toContain('--mediadeck-gap:22px');
+    expect(article?.getAttribute('style')).toContain('--mediadeck-icon-size:31px');
+    expect(article?.getAttribute('style')).toContain('--mediadeck-button-opacity:0.7');
+  });
 });
