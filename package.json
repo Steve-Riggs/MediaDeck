@@ -3,7 +3,9 @@
   "version": "0.1.0-alpha.1",
   "description": "A media-first Home Assistant Lovelace card for unified TV and streaming control.",
   "type": "module",
-  "files": ["dist/mediadeck.js"],
+  "files": [
+    "dist/mediadeck.js"
+  ],
   "scripts": {
     "build": "vite build",
     "test": "vitest",

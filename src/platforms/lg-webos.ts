@@ -1,8 +1,4 @@
-import {
-  genericCapabilities,
-  type NavigationCommand,
-  type PlatformAdapter,
-} from './types';
+import { genericCapabilities, type NavigationCommand, type PlatformAdapter } from './types';
 
 const COMMANDS: Record<NavigationCommand, string> = {
   UP: 'UP',

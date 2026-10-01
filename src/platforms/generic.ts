@@ -1,8 +1,4 @@
-import {
-  genericCapabilities,
-  remoteSendCommand,
-  type PlatformAdapter,
-} from './types';
+import { genericCapabilities, remoteSendCommand, type PlatformAdapter } from './types';
 
 export const genericAdapter: PlatformAdapter = {
   id: 'generic',

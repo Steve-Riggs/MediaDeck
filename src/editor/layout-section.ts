@@ -32,26 +32,30 @@ export function renderLayoutSection(
     <h3>Layout</h3>
     <div class="layout-list">
       ${order.map(
-        (region, index) => html`<div class="layout-row">
-          <label>
-            <input
-              type="checkbox"
-              .checked=${config.regions?.[region] ?? region !== 'inspector'}
-              @change=${(event: Event) =>
-                replace(toggleRegion(config, region, (event.target as HTMLInputElement).checked))}
-            />
-            ${region.replaceAll('_', ' ')}
-          </label>
-          <button ?disabled=${index === 0} @click=${() => replace(moveRegion(config, region, -1))}>
-            ↑
-          </button>
-          <button
-            ?disabled=${index === order.length - 1}
-            @click=${() => replace(moveRegion(config, region, 1))}
-          >
-            ↓
-          </button>
-        </div>`,
+        (region, index) =>
+          html`<div class="layout-row">
+            <label>
+              <input
+                type="checkbox"
+                .checked=${config.regions?.[region] ?? region !== 'inspector'}
+                @change=${(event: Event) =>
+                  replace(toggleRegion(config, region, (event.target as HTMLInputElement).checked))}
+              />
+              ${region.replaceAll('_', ' ')}
+            </label>
+            <button
+              ?disabled=${index === 0}
+              @click=${() => replace(moveRegion(config, region, -1))}
+            >
+              ↑
+            </button>
+            <button
+              ?disabled=${index === order.length - 1}
+              @click=${() => replace(moveRegion(config, region, 1))}
+            >
+              ↓
+            </button>
+          </div>`,
       )}
     </div>
   </section>`;

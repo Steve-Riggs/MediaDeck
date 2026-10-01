@@ -28,7 +28,9 @@ describe('actions', () => {
         entities: { audio: 'media_player.avr' },
       }),
     );
-    expect((await executeIntent(home, session, { kind: 'volume-set', volume: 0.35 })).ok).toBe(true);
+    expect((await executeIntent(home, session, { kind: 'volume-set', volume: 0.35 })).ok).toBe(
+      true,
+    );
     expect(home.calls.at(-1)).toMatchObject({
       domain: 'media_player',
       service: 'volume_set',
@@ -58,7 +60,10 @@ describe('actions', () => {
       }),
       entity('remote.android_tv', 'on', { integration: 'androidtv_remote' }),
     ]);
-    const session = resolveMediaSession(home, config('media_player.android_tv', 'remote.android_tv'));
+    const session = resolveMediaSession(
+      home,
+      config('media_player.android_tv', 'remote.android_tv'),
+    );
     await executeIntent(home, session, { kind: 'remote', command: 'UP' });
     expect(home.calls.at(-1)).toMatchObject({
       domain: 'remote',
@@ -92,7 +97,10 @@ describe('actions', () => {
       }),
       entity('remote.samsung_tv', 'on'),
     ]);
-    const session = resolveMediaSession(home, config('media_player.samsung_tv', 'remote.samsung_tv'));
+    const session = resolveMediaSession(
+      home,
+      config('media_player.samsung_tv', 'remote.samsung_tv'),
+    );
     await executeIntent(home, session, { kind: 'remote', command: 'RIGHT' });
     expect(home.calls.at(-1)).toMatchObject({ data: { command: 'KEY_RIGHT' } });
     await executeIntent(home, session, { kind: 'remote', command: 'SELECT' });
@@ -109,7 +117,9 @@ describe('actions', () => {
     ]);
     const session = resolveMediaSession(home, config('media_player.lg_webos_tv'));
     expect(session.capabilities.remoteNavigation).toBe(true);
-    expect((await executeIntent(home, session, { kind: 'remote', command: 'SELECT' })).ok).toBe(true);
+    expect((await executeIntent(home, session, { kind: 'remote', command: 'SELECT' })).ok).toBe(
+      true,
+    );
     expect(home.calls.at(-1)).toMatchObject({
       domain: 'webostv',
       service: 'button',

@@ -27,26 +27,27 @@ export function renderActionsSection(
     <h3>Watch actions</h3>
     <p class="hint">Use Home Assistant scripts for multi-device sequences.</p>
     ${actions.map(
-      (item, index) => html`<div class="action-row">
-        <input
-          aria-label=${`Watch action ${index + 1} name`}
-          placeholder="Name"
-          .value=${item.name}
-          @change=${(event: Event) =>
-            update(index, { ...item, name: (event.target as HTMLInputElement).value })}
-        />
-        <input
-          aria-label=${`Watch action ${index + 1} service`}
-          placeholder="script.watch_tv"
-          .value=${item.action.service}
-          @change=${(event: Event) =>
-            update(index, {
-              ...item,
-              action: { ...item.action, service: (event.target as HTMLInputElement).value },
-            })}
-        />
-        <button @click=${() => replace(removeWatchAction(config, index))}>Remove</button>
-      </div>`,
+      (item, index) =>
+        html`<div class="action-row">
+          <input
+            aria-label=${`Watch action ${index + 1} name`}
+            placeholder="Name"
+            .value=${item.name}
+            @change=${(event: Event) =>
+              update(index, { ...item, name: (event.target as HTMLInputElement).value })}
+          />
+          <input
+            aria-label=${`Watch action ${index + 1} service`}
+            placeholder="script.watch_tv"
+            .value=${item.action.service}
+            @change=${(event: Event) =>
+              update(index, {
+                ...item,
+                action: { ...item.action, service: (event.target as HTMLInputElement).value },
+              })}
+          />
+          <button @click=${() => replace(removeWatchAction(config, index))}>Remove</button>
+        </div>`,
     )}
     <button
       @click=${() =>

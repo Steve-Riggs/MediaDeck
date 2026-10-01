@@ -13,7 +13,10 @@ function adapterContext(session: ResolvedMediaSession) {
   return { entity: session.active ?? session.primary, remote: session.remote };
 }
 
-function remoteCall(session: ResolvedMediaSession, intent: Extract<MediaIntent, { kind: 'remote' }>) {
+function remoteCall(
+  session: ResolvedMediaSession,
+  intent: Extract<MediaIntent, { kind: 'remote' }>,
+) {
   return session.adapter.remoteAction(adapterContext(session), intent.command);
 }
 
@@ -47,7 +50,11 @@ export function canExecuteIntent(session: ResolvedMediaSession, intent: MediaInt
     case 'remote':
       return session.capabilities.remoteNavigation && Boolean(remoteCall(session, intent));
     case 'text':
-      return session.capabilities.textEntry && intent.text.length > 0 && Boolean(textCall(session, intent));
+      return (
+        session.capabilities.textEntry &&
+        intent.text.length > 0 &&
+        Boolean(textCall(session, intent))
+      );
     case 'custom':
       return Boolean(parts(intent.action.service));
   }
@@ -85,39 +92,74 @@ export async function executeIntent(
   try {
     switch (intent.kind) {
       case 'power':
-        await hass.callService('media_player', intent.on ? 'turn_on' : 'turn_off', {}, {
-          entity_id: session.primary!.entity_id,
-        });
+        await hass.callService(
+          'media_player',
+          intent.on ? 'turn_on' : 'turn_off',
+          {},
+          {
+            entity_id: session.primary!.entity_id,
+          },
+        );
         break;
       case 'play-pause':
-        await hass.callService('media_player', 'media_play_pause', {}, {
-          entity_id: session.transport!.entity_id,
-        });
+        await hass.callService(
+          'media_player',
+          'media_play_pause',
+          {},
+          {
+            entity_id: session.transport!.entity_id,
+          },
+        );
         break;
       case 'stop':
-        await hass.callService('media_player', 'media_stop', {}, {
-          entity_id: session.transport!.entity_id,
-        });
+        await hass.callService(
+          'media_player',
+          'media_stop',
+          {},
+          {
+            entity_id: session.transport!.entity_id,
+          },
+        );
         break;
       case 'next':
-        await hass.callService('media_player', 'media_next_track', {}, {
-          entity_id: session.transport!.entity_id,
-        });
+        await hass.callService(
+          'media_player',
+          'media_next_track',
+          {},
+          {
+            entity_id: session.transport!.entity_id,
+          },
+        );
         break;
       case 'previous':
-        await hass.callService('media_player', 'media_previous_track', {}, {
-          entity_id: session.transport!.entity_id,
-        });
+        await hass.callService(
+          'media_player',
+          'media_previous_track',
+          {},
+          {
+            entity_id: session.transport!.entity_id,
+          },
+        );
         break;
       case 'seek':
-        await hass.callService('media_player', 'media_seek', { seek_position: intent.position }, {
-          entity_id: session.transport!.entity_id,
-        });
+        await hass.callService(
+          'media_player',
+          'media_seek',
+          { seek_position: intent.position },
+          {
+            entity_id: session.transport!.entity_id,
+          },
+        );
         break;
       case 'volume-set':
-        await hass.callService('media_player', 'volume_set', { volume_level: intent.volume }, {
-          entity_id: session.audio!.entity_id,
-        });
+        await hass.callService(
+          'media_player',
+          'volume_set',
+          { volume_level: intent.volume },
+          {
+            entity_id: session.audio!.entity_id,
+          },
+        );
         break;
       case 'volume-up':
       case 'volume-down':
@@ -129,14 +171,24 @@ export async function executeIntent(
         );
         break;
       case 'mute':
-        await hass.callService('media_player', 'volume_mute', { is_volume_muted: intent.muted }, {
-          entity_id: session.audio!.entity_id,
-        });
+        await hass.callService(
+          'media_player',
+          'volume_mute',
+          { is_volume_muted: intent.muted },
+          {
+            entity_id: session.audio!.entity_id,
+          },
+        );
         break;
       case 'source-select':
-        await hass.callService('media_player', 'select_source', { source: intent.source }, {
-          entity_id: session.primary!.entity_id,
-        });
+        await hass.callService(
+          'media_player',
+          'select_source',
+          { source: intent.source },
+          {
+            entity_id: session.primary!.entity_id,
+          },
+        );
         break;
       case 'remote':
         await call(hass, remoteCall(session, intent)!);

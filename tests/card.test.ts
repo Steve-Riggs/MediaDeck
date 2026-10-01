@@ -81,6 +81,8 @@ describe('MediaDeck card', () => {
     ]);
     document.body.append(card);
     await card.updateComplete;
-    expect(card.shadowRoot?.querySelector('input[aria-label="Send text to Android TV"]')).not.toBeNull();
+    expect(
+      card.shadowRoot?.querySelector('input[aria-label="Send text to Android TV"]'),
+    ).not.toBeNull();
   });
 });

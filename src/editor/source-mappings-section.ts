@@ -54,9 +54,10 @@ export function renderSourceMappingsSection(
             >
               <option value="">Automatic</option>
               ${media.map(
-                (entity) => html`<option value=${entity.entity_id}>
-                  ${entity.attributes.friendly_name ?? entity.entity_id}
-                </option>`,
+                (entity) =>
+                  html`<option value=${entity.entity_id}>
+                    ${entity.attributes.friendly_name ?? entity.entity_id}
+                  </option>`,
               )}
             </select>
             <select
@@ -70,9 +71,10 @@ export function renderSourceMappingsSection(
             >
               <option value="">Default remote</option>
               ${remotes.map(
-                (entity) => html`<option value=${entity.entity_id}>
-                  ${entity.attributes.friendly_name ?? entity.entity_id}
-                </option>`,
+                (entity) =>
+                  html`<option value=${entity.entity_id}>
+                    ${entity.attributes.friendly_name ?? entity.entity_id}
+                  </option>`,
               )}
             </select>
             ${mapping
@@ -88,7 +90,9 @@ export function renderSourceMappingsSection(
                         }),
                       )}
                   />
-                  <button @click=${() => replace(removeSourceMapping(config, source))}>Clear</button>`
+                  <button @click=${() => replace(removeSourceMapping(config, source))}>
+                    Clear
+                  </button>`
               : ''}
           </div>`;
         })
