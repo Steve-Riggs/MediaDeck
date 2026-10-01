@@ -1,0 +1,59 @@
+import {
+  MEDIADECK_SCHEMA_VERSION,
+  type AppearanceConfig,
+  type MediaDeckConfig,
+  type NormalizedMediaDeckConfig,
+  type RegionName,
+} from './types';
+export const DEFAULT_SECTION_ORDER: RegionName[] = [
+  'now_playing',
+  'transport',
+  'remote',
+  'sources',
+  'audio',
+  'watch_actions',
+  'inspector',
+];
+export const DEFAULT_APPEARANCE: Required<AppearanceConfig> = {
+  density: 'standard',
+  min_height: 320,
+  artwork_size: 180,
+  artwork_fit: 'cover',
+  border_radius: 20,
+  opacity: 1,
+  background: 'var(--ha-card-background, var(--card-background-color, #fff))',
+  text_color: 'var(--primary-text-color)',
+  accent_color: 'var(--primary-color)',
+  button_background: 'var(--secondary-background-color)',
+  button_opacity: 0.92,
+  icon_size: 24,
+  font_scale: 1,
+  gap: 14,
+};
+const DEFAULT_REGIONS: NormalizedMediaDeckConfig['regions'] = {
+  now_playing: true,
+  transport: true,
+  remote: true,
+  sources: true,
+  audio: true,
+  watch_actions: true,
+  inspector: false,
+};
+export function normalizeConfig(input: MediaDeckConfig): NormalizedMediaDeckConfig {
+  return {
+    ...input,
+    type: 'custom:mediadeck-card',
+    schema_version: input.schema_version ?? MEDIADECK_SCHEMA_VERSION,
+    entities: { ...(input.entities ?? {}) },
+    source_mappings: { ...(input.source_mappings ?? {}) },
+    watch_actions: [...(input.watch_actions ?? [])],
+    custom_actions: { ...(input.custom_actions ?? {}) },
+    regions: { ...DEFAULT_REGIONS, ...(input.regions ?? {}) },
+    section_order: [...(input.section_order ?? DEFAULT_SECTION_ORDER)],
+    appearance: { ...DEFAULT_APPEARANCE, ...(input.appearance ?? {}) },
+    discovery: {
+      enabled: input.discovery?.enabled ?? true,
+      minimum_confidence: input.discovery?.minimum_confidence ?? 0.55,
+    },
+  };
+}

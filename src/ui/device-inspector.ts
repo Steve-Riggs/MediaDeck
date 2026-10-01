@@ -1,0 +1,19 @@
+import { html, type TemplateResult } from 'lit';
+import type { ResolvedMediaSession } from '../session/types';
+export function renderDeviceInspector(s: ResolvedMediaSession): TemplateResult {
+  const row = (l: string, v?: string) =>
+    html`<dt>${l}</dt>
+      <dd>${v ?? '—'}</dd>`;
+  return html`<details class="inspector" open>
+    <summary>Device inspector</summary>
+    <dl>
+      ${row('Active', s.active?.entity_id)}${row('Metadata', s.metadata?.entity_id)}${row(
+        'Transport',
+        s.transport?.entity_id,
+      )}${row('Remote', s.remote?.entity_id)}${row('Audio', s.audio?.entity_id)}${row(
+        'Source',
+        s.source,
+      )}${row('Adapter', s.adapter.id)}${row('Resolution', s.reason)}
+    </dl>
+  </details>`;
+}

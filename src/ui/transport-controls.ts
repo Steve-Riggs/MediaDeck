@@ -1,0 +1,20 @@
+import { html, type TemplateResult } from 'lit';
+import type { ResolvedMediaSession } from '../session/types';
+import type { MediaIntent } from '../actions/types';
+export function renderTransportControls(
+  s: ResolvedMediaSession,
+  a: (i: MediaIntent) => void,
+): TemplateResult {
+  const c = s.capabilities;
+  return html`<section class="control-row transport" aria-label="Playback controls">
+    ${c.previous
+      ? html`<button @click=${() => a({ kind: 'previous' })}>⏮</button>`
+      : ''}${c.playPause
+      ? html`<button class="primary" @click=${() => a({ kind: 'play-pause' })}>
+          ${s.state === 'playing' ? '⏸' : '▶'}
+        </button>`
+      : ''}${c.next ? html`<button @click=${() => a({ kind: 'next' })}>⏭</button>` : ''}${c.stop
+      ? html`<button @click=${() => a({ kind: 'stop' })}>⏹</button>`
+      : ''}
+  </section>`;
+}

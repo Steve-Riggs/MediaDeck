@@ -1,0 +1,87 @@
+import type { HomeAssistant, HassEntity } from '../types/home-assistant';
+import type { NormalizedMediaDeckConfig } from '../config/types';
+import { selectPlatformAdapter } from '../platforms/registry';
+import type { ResolvedMediaSession, MediaDeckSystemState } from './types';
+function usable(e?: HassEntity): e is HassEntity {
+  return Boolean(e && !['unavailable', 'unknown'].includes(e.state));
+}
+function mediaState(e?: HassEntity): MediaDeckSystemState {
+  if (!e) return 'unavailable';
+  if (e.state === 'playing') return 'playing';
+  if (e.state === 'paused') return 'paused';
+  if (e.state === 'off') return 'off';
+  if (e.state === 'unavailable') return 'unavailable';
+  if (['idle', 'standby', 'on'].includes(e.state)) return 'idle';
+  return 'unknown';
+}
+const state = (h: HomeAssistant, id?: string) => (id ? h.states[id] : undefined);
+export function resolveMediaSession(
+  hass: HomeAssistant,
+  config: NormalizedMediaDeckConfig,
+): ResolvedMediaSession {
+  const primary = state(hass, config.entity);
+  const source = primary?.attributes.source as string | undefined;
+  const mapping = source ? config.source_mappings[source] : undefined;
+  const mapped = state(hass, mapping?.entity);
+  const candidates = [
+    ...(config.entities.related ?? []).map((id) => state(hass, id)),
+    state(hass, config.entities.transport),
+    state(hass, config.entities.metadata),
+  ].filter((v): v is HassEntity => Boolean(v));
+  let active: HassEntity | undefined;
+  let reason = 'primary-fallback';
+  if (mapping && usable(mapped)) {
+    active = mapped;
+    reason = `explicit-source-mapping:${source}`;
+  } else {
+    const playing = candidates.find((c) => usable(c) && ['playing', 'paused'].includes(c.state));
+    if (playing) {
+      active = playing;
+      reason = 'active-playback';
+    } else if (usable(state(hass, config.entities.transport))) {
+      active = state(hass, config.entities.transport);
+      reason = 'preferred-transport';
+    } else {
+      active = primary;
+      if (mapping && !usable(mapped)) reason = `mapping-unavailable-fallback:${source}`;
+    }
+  }
+  const metadata = usable(state(hass, config.entities.metadata))
+    ? state(hass, config.entities.metadata)
+    : active;
+  const transport = usable(state(hass, config.entities.transport))
+    ? state(hass, config.entities.transport)
+    : active;
+  const remote = usable(state(hass, mapping?.remote))
+    ? state(hass, mapping?.remote)
+    : usable(state(hass, config.entities.remote))
+      ? state(hass, config.entities.remote)
+      : undefined;
+  const audio = usable(state(hass, mapping?.audio_entity))
+    ? state(hass, mapping?.audio_entity)
+    : usable(state(hass, config.entities.audio))
+      ? state(hass, config.entities.audio)
+      : active;
+  const adapter = selectPlatformAdapter({ entity: active, remote });
+  const capabilities = adapter.capabilities({ entity: active, remote });
+  if (audio && audio.entity_id !== active?.entity_id) {
+    const ac = selectPlatformAdapter({ entity: audio }).capabilities({ entity: audio });
+    capabilities.volumeSet ||= ac.volumeSet;
+    capabilities.volumeStep ||= ac.volumeStep;
+    capabilities.mute ||= ac.mute;
+  }
+  return {
+    primary,
+    active,
+    metadata,
+    transport,
+    remote,
+    audio,
+    source,
+    state: mediaState(active ?? primary),
+    adapter,
+    capabilities,
+    reason,
+    mappedLabel: mapping?.label,
+  };
+}

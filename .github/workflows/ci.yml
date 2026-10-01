@@ -1,0 +1,27 @@
+name: CI
+on:
+  push:
+    branches: [main, 'feature/**']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test -- --run
+      - run: npm run build
+      - name: Validate release asset
+        run: |
+          test -s dist/mediadeck.js
+          grep -q "mediadeck-card" dist/mediadeck.js
+          grep -q "mediadeck-editor" dist/mediadeck.js

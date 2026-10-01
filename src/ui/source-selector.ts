@@ -1,0 +1,21 @@
+import { html, nothing, type TemplateResult } from 'lit';
+import type { ResolvedMediaSession } from '../session/types';
+import type { MediaIntent } from '../actions/types';
+export function renderSourceSelector(
+  s: ResolvedMediaSession,
+  a: (i: MediaIntent) => void,
+): TemplateResult | typeof nothing {
+  const sources = s.primary?.attributes.source_list;
+  if (!s.capabilities.sourceSelect || !Array.isArray(sources) || !sources.length) return nothing;
+  return html`<section class="source-panel">
+    <label
+      >Source<select
+        .value=${s.source ?? ''}
+        @change=${(e: Event) =>
+          a({ kind: 'source-select', source: (e.target as HTMLSelectElement).value })}
+      >
+        ${sources.map((x: string) => html`<option value=${x}>${x}</option>`)}
+      </select></label
+    >
+  </section>`;
+}
