@@ -1,0 +1,31 @@
+name: Format once
+on:
+  push:
+    branches: ['feature/mediadeck-v0.1']
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: feature/mediadeck-v0.1
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run format
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src tests '*.ts' '*.json' .github README.md
+          git commit -m "style: format final MediaDeck changes"
+          git push origin HEAD:feature/mediadeck-v0.1
