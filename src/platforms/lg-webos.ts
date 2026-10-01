@@ -1,0 +1,2 @@
+import { genericCapabilities,type PlatformAdapter } from './types';
+export const lgWebosAdapter:PlatformAdapter={id:'lg-webos',name:'LG webOS',matches:({entity})=>{const text=[entity?.entity_id,entity?.attributes.integration,entity?.attributes.manufacturer,entity?.attributes.model,entity?.attributes.platform].filter(Boolean).join(' ').toLowerCase();return /webos|lg tv|lge/.test(text);},capabilities:genericCapabilities};
