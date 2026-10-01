@@ -13,11 +13,15 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - run: npm install
+          cache: npm
+      - run: npm ci
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test -- --run
       - run: npm run build
       - name: Validate release asset
-        run: test -s dist/mediadeck.js
+        run: |
+          test -s dist/mediadeck.js
+          grep -q "mediadeck-card" dist/mediadeck.js
+          grep -q "mediadeck-editor" dist/mediadeck.js
