@@ -75,13 +75,23 @@ export function renderAppearanceSection(
           @change=${(e: Event) => setNumber('font_scale', (e.target as HTMLInputElement).value)}
       /></label>
       <label
-        >Opacity<input
+        >Card opacity<input
           type="range"
           min="0.2"
           max="1"
           step="0.05"
           .value=${String(appearance.opacity ?? 1)}
           @change=${(e: Event) => setNumber('opacity', (e.target as HTMLInputElement).value)}
+      /></label>
+      <label
+        >Button opacity<input
+          type="range"
+          min="0.2"
+          max="1"
+          step="0.05"
+          .value=${String(appearance.button_opacity ?? 0.92)}
+          @change=${(e: Event) =>
+            setNumber('button_opacity', (e.target as HTMLInputElement).value)}
       /></label>
     </div>
     <label
