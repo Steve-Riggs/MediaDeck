@@ -1,3 +1,67 @@
-import { LitElement,css,html } from 'lit';import { property,state } from 'lit/decorators.js';import type { HomeAssistant } from './types/home-assistant';import type { MediaDeckConfig,RegionName } from './config/types';import { DEFAULT_SECTION_ORDER } from './config/defaults';import { renderDiscoverySection } from './editor/discovery-section';
-export class MediaDeckEditor extends LitElement{static styles=css`:host{display:block}section{padding:14px;border:1px solid var(--divider-color,#ddd);border-radius:14px;margin-bottom:12px}label{display:grid;gap:5px;margin:8px 0}input,select,button{min-height:40px;border-radius:10px;border:1px solid var(--divider-color,#ddd);background:var(--secondary-background-color,#f4f4f4);color:inherit;padding:0 10px}.checks label{display:flex;align-items:center;gap:8px}.suggestion{display:grid;grid-template-columns:1fr auto;gap:8px}.suggestion small{display:block;opacity:.65}`;@property({attribute:false}) hass?:HomeAssistant;@state() private config:MediaDeckConfig={type:'custom:mediadeck-card',entity:''};setConfig(c:MediaDeckConfig){this.config={...c};}private replace(c:MediaDeckConfig){this.config=c;this.dispatchEvent(new CustomEvent('config-changed',{detail:{config:c},bubbles:true,composed:true}));}private patch(p:Partial<MediaDeckConfig>){this.replace({...this.config,...p});}protected render(){if(!this.hass)return html`<p>Loading Home Assistant…</p>`;const media=Object.values(this.hass.states).filter(e=>e.entity_id.startsWith('media_player.'));const remotes=Object.values(this.hass.states).filter(e=>e.entity_id.startsWith('remote.'));const roles=this.config.entities??{};const regions=this.config.regions??{};const sel=(label:string,value:string|undefined,list:typeof media,on:(v:string)=>void)=>html`<label>${label}<select .value=${value??''} @change=${(e:Event)=>on((e.target as HTMLSelectElement).value)}><option value="">None</option>${list.map(x=>html`<option value=${x.entity_id}>${x.attributes.friendly_name??x.entity_id}</option>`)}</select></label>`;return html`<section><h3>Devices</h3>${sel('Primary media entity',this.config.entity,media,v=>this.patch({entity:v}))}${sel('Transport entity',roles.transport,media,v=>this.patch({entities:{...roles,transport:v||undefined}}))}${sel('Remote entity',roles.remote,remotes,v=>this.patch({entities:{...roles,remote:v||undefined}}))}${sel('Audio / AVR entity',roles.audio,media,v=>this.patch({entities:{...roles,audio:v||undefined}}))}</section><section><h3>Layout</h3><div class="checks">${DEFAULT_SECTION_ORDER.map((n:RegionName)=>html`<label><input type="checkbox" .checked=${regions[n]??n!=='inspector'} @change=${(e:Event)=>this.patch({regions:{...regions,[n]:(e.target as HTMLInputElement).checked}})}/>${n}</label>`)}</div></section><section><h3>Appearance</h3><label>Artwork size<input type="number" .value=${String(this.config.appearance?.artwork_size??180)} @change=${(e:Event)=>this.patch({appearance:{...(this.config.appearance??{}),artwork_size:Number((e.target as HTMLInputElement).value)}})}/></label><label>Opacity<input type="range" min="0.2" max="1" step="0.05" .value=${String(this.config.appearance?.opacity??1)} @change=${(e:Event)=>this.patch({appearance:{...(this.config.appearance??{}),opacity:Number((e.target as HTMLInputElement).value)}})}/></label></section>${renderDiscoverySection(this.hass,this.config,c=>this.replace(c))}`;}}
-if(!customElements.get('mediadeck-editor'))customElements.define('mediadeck-editor',MediaDeckEditor);
+import { LitElement, css, html } from 'lit';
+import { property, state } from 'lit/decorators.js';
+import type { HomeAssistant } from './types/home-assistant';
+import type { MediaDeckConfig } from './config/types';
+import { renderEntitySection } from './editor/entity-section';
+import { renderSourceMappingsSection } from './editor/source-mappings-section';
+import { renderLayoutSection } from './editor/layout-section';
+import { renderActionsSection } from './editor/actions-section';
+import { renderAppearanceSection } from './editor/appearance-section';
+import { renderDiscoverySection } from './editor/discovery-section';
+
+export class MediaDeckEditor extends LitElement {
+  static styles = css`
+    :host { display: block; }
+    section { padding: 14px; border: 1px solid var(--divider-color, #ddd); border-radius: 14px; margin-bottom: 12px; }
+    h3 { margin: 0 0 10px; }
+    label { display: grid; gap: 5px; margin: 8px 0; }
+    input, select, button { min-height: 40px; border-radius: 10px; border: 1px solid var(--divider-color, #ddd); background: var(--secondary-background-color, #f4f4f4); color: inherit; padding: 0 10px; box-sizing: border-box; }
+    select[multiple] { min-height: 110px; padding: 6px; }
+    button { cursor: pointer; }
+    .hint { opacity: 0.7; font-size: 0.82rem; }
+    .suggestion, .mapping-row, .action-row, .layout-row { display: grid; gap: 8px; align-items: center; margin: 8px 0; }
+    .suggestion { grid-template-columns: 1fr auto; }
+    .suggestion small { display: block; opacity: 0.65; }
+    .mapping-row { grid-template-columns: minmax(90px, .6fr) 1fr 1fr 1fr auto; }
+    .action-row { grid-template-columns: 1fr 1.4fr auto; }
+    .layout-row { grid-template-columns: 1fr auto auto; }
+    .layout-row label { display: flex; align-items: center; gap: 8px; margin: 0; text-transform: capitalize; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    @media (max-width: 620px) { .mapping-row, .action-row, .two-col { grid-template-columns: 1fr; } }
+  `;
+
+  @property({ attribute: false }) hass?: HomeAssistant;
+  @state() private config: MediaDeckConfig = { type: 'custom:mediadeck-card', entity: '' };
+
+  setConfig(config: MediaDeckConfig) {
+    this.config = { ...config };
+  }
+
+  private replace(config: MediaDeckConfig) {
+    this.config = config;
+    this.dispatchEvent(
+      new CustomEvent('config-changed', {
+        detail: { config },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
+  protected render() {
+    if (!this.hass) return html`<p>Loading Home Assistant…</p>`;
+    const replace = (config: MediaDeckConfig) => this.replace(config);
+    return html`
+      ${renderEntitySection(this.hass, this.config, replace)}
+      ${renderSourceMappingsSection(this.hass, this.config, replace)}
+      ${renderLayoutSection(this.config, replace)}
+      ${renderActionsSection(this.config, replace)}
+      ${renderAppearanceSection(this.config, replace)}
+      ${renderDiscoverySection(this.hass, this.config, replace)}
+    `;
+  }
+}
+
+if (!customElements.get('mediadeck-editor')) {
+  customElements.define('mediadeck-editor', MediaDeckEditor);
+}
