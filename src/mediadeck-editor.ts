@@ -1,7 +1,12 @@
-import { LitElement, css, html } from 'lit';
+import { LitElement, css, html, type PropertyValues } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import type { HomeAssistant } from './types/home-assistant';
 import type { MediaDeckConfig } from './config/types';
+import { validateConfig } from './config/validate';
+import {
+  loadEntityRegistry,
+  type EntityRegistryMap,
+} from './registry/entity-registry';
 import { renderEntitySection } from './editor/entity-section';
 import { renderSourceMappingsSection } from './editor/source-mappings-section';
 import { renderLayoutSection } from './editor/layout-section';
@@ -50,6 +55,12 @@ export class MediaDeckEditor extends LitElement {
       opacity: 0.7;
       font-size: 0.82rem;
     }
+    .config-error {
+      border-color: var(--error-color, #db4437);
+    }
+    .config-error ul {
+      margin-bottom: 0;
+    }
     .suggestion,
     .mapping-row,
     .action-row,
@@ -67,7 +78,7 @@ export class MediaDeckEditor extends LitElement {
       opacity: 0.65;
     }
     .mapping-row {
-      grid-template-columns: minmax(90px, 0.6fr) 1fr 1fr 1fr auto;
+      grid-template-columns: minmax(90px, 0.5fr) 1.4fr 1.2fr 1fr 1fr auto;
     }
     .action-row {
       grid-template-columns: 1fr 1.4fr auto;
@@ -87,7 +98,7 @@ export class MediaDeckEditor extends LitElement {
       grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
-    @media (max-width: 620px) {
+    @media (max-width: 760px) {
       .mapping-row,
       .action-row,
       .two-col {
@@ -98,6 +109,18 @@ export class MediaDeckEditor extends LitElement {
 
   @property({ attribute: false }) hass?: HomeAssistant;
   @state() private config: MediaDeckConfig = { type: 'custom:mediadeck-card', entity: '' };
+  @state() private registry: EntityRegistryMap = {};
+  private registrySource?: HomeAssistant;
+
+  protected willUpdate(changed: PropertyValues<this>) {
+    if (changed.has('hass') && this.hass && this.registrySource !== this.hass) {
+      const source = this.hass;
+      this.registrySource = source;
+      void loadEntityRegistry(source).then((registry) => {
+        if (this.registrySource === source) this.registry = registry;
+      });
+    }
+  }
 
   setConfig(config: MediaDeckConfig) {
     this.config = { ...config };
@@ -116,13 +139,23 @@ export class MediaDeckEditor extends LitElement {
 
   protected render() {
     if (!this.hass) return html`<p>Loading Home Assistant…</p>`;
+    const validation = validateConfig(this.config);
+    if (!validation.valid) {
+      return html`<section class="config-error">
+        <h3>MediaDeck configuration error</h3>
+        <ul>
+          ${validation.errors.map((error) => html`<li>${error}</li>`)}
+        </ul>
+      </section>`;
+    }
+
     const replace = (config: MediaDeckConfig) => this.replace(config);
     return html`
-      ${renderEntitySection(this.hass, this.config, replace)}
-      ${renderSourceMappingsSection(this.hass, this.config, replace)}
+      ${renderEntitySection(this.hass, this.config, replace, this.registry)}
+      ${renderSourceMappingsSection(this.hass, this.config, replace, this.registry)}
       ${renderLayoutSection(this.config, replace)} ${renderActionsSection(this.config, replace)}
       ${renderAppearanceSection(this.config, replace)}
-      ${renderDiscoverySection(this.hass, this.config, replace)}
+      ${renderDiscoverySection(this.hass, this.config, replace, this.registry)}
     `;
   }
 }
