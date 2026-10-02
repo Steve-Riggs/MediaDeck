@@ -17,6 +17,8 @@ import { renderAudioControls } from './ui/audio-controls';
 import { renderWatchActions } from './ui/watch-actions';
 import { renderDeviceInspector } from './ui/device-inspector';
 import { cardStyles } from './styles/card-styles';
+import { ArtworkLookup, type ArtworkResult } from './artwork/lookup';
+import { getArtworkMedia } from './artwork/media';
 
 export class MediaDeckCard extends LitElement {
   static styles = cardStyles;
@@ -28,6 +30,10 @@ export class MediaDeckCard extends LitElement {
   @state() private volumeDraft?: number;
   private registrySource?: HomeAssistant;
   private progressTimer?: number;
+  private artworkLookup = new ArtworkLookup();
+  private artworkSignature = '';
+  @state() private artworkResult?: ArtworkResult;
+  @state() private failedArtwork = new Set<string>();
 
   connectedCallback() {
     super.connectedCallback();
@@ -37,7 +43,34 @@ export class MediaDeckCard extends LitElement {
   disconnectedCallback() {
     if (this.progressTimer !== undefined) window.clearInterval(this.progressTimer);
     this.progressTimer = undefined;
+    this.artworkSignature = '';
     super.disconnectedCallback();
+  }
+
+  private updateArtwork() {
+    if (!this.hass || !this.config || !this.isConnected) return;
+    const session = resolveMediaSession(this.hass, this.config, this.registry);
+    const media = getArtworkMedia(session.metadata ?? session.active ?? session.primary);
+    const settings = this.config.artwork ?? {};
+    const enabled =
+      this.config.regions.now_playing &&
+      settings.provider &&
+      settings.provider !== 'home-assistant';
+    const signature = JSON.stringify([enabled, media, settings, Math.floor(Date.now() / 300000)]);
+    if (signature === this.artworkSignature) return;
+    this.artworkSignature = signature;
+    this.failedArtwork = new Set();
+    this.artworkResult = enabled
+      ? {
+          message: media
+            ? 'Looking up artwork…'
+            : 'No film or series title is available for artwork lookup.',
+        }
+      : undefined;
+    if (enabled && media)
+      void this.artworkLookup.lookup(media, settings).then((result) => {
+        if (this.isConnected && this.artworkSignature === signature) this.artworkResult = result;
+      });
   }
 
   protected willUpdate(changed: PropertyValues<this>) {
@@ -48,6 +81,7 @@ export class MediaDeckCard extends LitElement {
         if (this.registrySource === source) this.registry = registry;
       });
     }
+    this.updateArtwork();
   }
 
   setConfig(config: MediaDeckConfig) {
@@ -109,13 +143,26 @@ export class MediaDeckCard extends LitElement {
     if (!this.config?.regions[region]) return nothing;
     switch (region) {
       case 'now_playing':
-        return renderNowPlaying(session, this.config, (intent) => void this.run(intent));
+        return renderNowPlaying(
+          session,
+          this.config,
+          (intent) => void this.run(intent),
+          this.artworkResult,
+          this.failedArtwork,
+          (url) => {
+            this.failedArtwork = new Set([...this.failedArtwork, url]);
+          },
+        );
       case 'transport':
         return renderTransportControls(session, (intent) => void this.run(intent));
       case 'remote':
         return renderRemoteControls(session, (intent) => void this.run(intent));
       case 'sources':
-        return renderSourceSelector(session, (intent) => void this.run(intent));
+        return renderSourceSelector(
+          session,
+          (intent) => void this.run(intent),
+          this.config.app_names,
+        );
       case 'audio':
         return renderAudioControls(
           session,
@@ -180,10 +227,12 @@ export class MediaDeckCard extends LitElement {
         </div>
       </header>
       <div class="card-body">
-        ${this.config.section_order.map(
-          (region) =>
-            html`<div class=${`region region-${region}`}>${this.section(region, session)}</div>`,
-        )}
+        ${this.config.section_order.map((region) => {
+          const content = this.section(region, session);
+          return content === nothing
+            ? nothing
+            : html`<div class=${`region region-${region}`}>${content}</div>`;
+        })}
       </div>
       ${this.actionError
         ? html`<div class="error" role="status">${this.actionError}</div>`

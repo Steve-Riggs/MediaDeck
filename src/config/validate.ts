@@ -55,6 +55,34 @@ export function validateConfig(input: unknown): ValidationResult {
   if (c.type !== 'custom:mediadeck-card') errors.push('type must be custom:mediadeck-card.');
   if (!isEntityId(c.entity)) errors.push('entity is required.');
   if (c.platform !== undefined && !isPlatform(c.platform)) errors.push('platform is invalid.');
+  if (
+    c.app_names !== undefined &&
+    (!isRecord(c.app_names) ||
+      !Object.entries(c.app_names).every(
+        ([id, name]) => id.trim() && typeof name === 'string' && name.trim(),
+      ))
+  )
+    errors.push('app_names must map app IDs to display names.');
+  if (c.artwork !== undefined) {
+    if (!isRecord(c.artwork)) errors.push('artwork must be an object.');
+    else {
+      if (
+        c.artwork.provider !== undefined &&
+        !['home-assistant', 'tmdb', 'fanart'].includes(String(c.artwork.provider))
+      )
+        errors.push('artwork.provider is invalid.');
+      if (
+        c.artwork.image_type !== undefined &&
+        !['poster', 'backdrop'].includes(String(c.artwork.image_type))
+      )
+        errors.push('artwork.image_type is invalid.');
+      if (c.artwork.fallback !== undefined && typeof c.artwork.fallback !== 'boolean')
+        errors.push('artwork.fallback must be a boolean.');
+      for (const key of ['tmdb_api_key', 'fanart_api_key', 'fanart_client_key', 'language'])
+        if (c.artwork[key] !== undefined && typeof c.artwork[key] !== 'string')
+          errors.push(`artwork.${key} must be a string.`);
+    }
+  }
 
   if (c.entities !== undefined) {
     if (!isRecord(c.entities)) errors.push('entities must be an object.');

@@ -1,9 +1,11 @@
 import { html, nothing, type TemplateResult } from 'lit';
 import type { ResolvedMediaSession } from '../session/types';
 import type { MediaIntent } from '../actions/types';
+import { appName } from '../media/app-names';
 export function renderSourceSelector(
   s: ResolvedMediaSession,
   a: (i: MediaIntent) => void,
+  names: Record<string, string> = {},
 ): TemplateResult | typeof nothing {
   const sources = s.primary?.attributes.source_list;
   if (!s.capabilities.sourceSelect || !Array.isArray(sources) || !sources.length) return nothing;
@@ -14,7 +16,10 @@ export function renderSourceSelector(
         @change=${(e: Event) =>
           a({ kind: 'source-select', source: (e.target as HTMLSelectElement).value })}
       >
-        ${sources.map((x: string) => html`<option value=${x}>${x}</option>`)}
+        ${sources.map(
+          (x: string) =>
+            html`<option value=${x} ?selected=${s.source === x}>${appName(x, names)}</option>`,
+        )}
       </select></label
     >
   </section>`;
