@@ -17,6 +17,10 @@ export interface MediaDeckAction {
   data?: Record<string, unknown>;
   confirmation?: string;
 }
+export interface PowerActions {
+  on?: MediaDeckAction;
+  off?: MediaDeckAction;
+}
 export interface SourceMapping {
   entity: string;
   remote?: string;
@@ -26,6 +30,7 @@ export interface SourceMapping {
   platform?: PlatformId;
 }
 export interface EntityRoles {
+  power?: string;
   metadata?: string;
   transport?: string;
   remote?: string;
@@ -66,6 +71,7 @@ export interface MediaDeckConfig {
   source_mappings?: Record<string, SourceMapping>;
   watch_actions?: WatchAction[];
   custom_actions?: Record<string, MediaDeckAction>;
+  power_actions?: PowerActions;
   regions?: Partial<Record<RegionName, boolean>>;
   section_order?: RegionName[];
   appearance?: AppearanceConfig;
@@ -79,6 +85,7 @@ export interface NormalizedMediaDeckConfig extends MediaDeckConfig {
   source_mappings: Record<string, SourceMapping>;
   watch_actions: WatchAction[];
   custom_actions: Record<string, MediaDeckAction>;
+  power_actions: PowerActions;
   regions: Record<RegionName, boolean>;
   section_order: RegionName[];
   appearance: Required<AppearanceConfig>;
