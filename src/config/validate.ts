@@ -26,6 +26,13 @@ function isEntityId(value: unknown): value is string {
   return typeof value === 'string' && value.includes('.');
 }
 
+function isPowerEntityId(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    (value.startsWith('media_player.') || value.startsWith('remote.'))
+  );
+}
+
 function isPlatform(value: unknown): value is PlatformId {
   return typeof value === 'string' && PLATFORMS.includes(value as PlatformId);
 }
@@ -53,6 +60,8 @@ export function validateConfig(input: unknown): ValidationResult {
   if (c.entities !== undefined) {
     if (!isRecord(c.entities)) errors.push('entities must be an object.');
     else {
+      const power = c.entities.power;
+      if (power !== undefined && !isPowerEntityId(power)) errors.push('entities.power is invalid.');
       for (const role of ['metadata', 'transport', 'remote', 'audio'] as const) {
         const value = c.entities[role];
         if (value !== undefined && !isEntityId(value)) errors.push(`entities.${role} is invalid.`);
@@ -60,6 +69,16 @@ export function validateConfig(input: unknown): ValidationResult {
       const related = c.entities.related;
       if (related !== undefined && (!Array.isArray(related) || !related.every(isEntityId)))
         errors.push('entities.related must be an array of entity IDs.');
+    }
+  }
+
+  if (c.power_actions !== undefined) {
+    if (!isRecord(c.power_actions)) errors.push('power_actions must be an object.');
+    else {
+      for (const [name, action] of Object.entries(c.power_actions)) {
+        if (!['on', 'off'].includes(name) || !isAction(action))
+          errors.push(`power_actions.${name} is invalid.`);
+      }
     }
   }
 
