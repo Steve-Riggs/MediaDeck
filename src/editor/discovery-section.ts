@@ -1,51 +1,64 @@
 import { html, type TemplateResult } from 'lit';
 import type { HomeAssistant } from '../types/home-assistant';
 import type { MediaDeckConfig } from '../config/types';
+import type { EntityRegistryMap } from '../registry/entity-registry';
 import { normalizeConfig } from '../config/defaults';
 import { discoverMediaRelationships, type DiscoverySuggestion } from '../discovery/discover';
+
 export function applyDiscoverySuggestion(
-  c: MediaDeckConfig,
-  s: DiscoverySuggestion,
+  config: MediaDeckConfig,
+  suggestion: DiscoverySuggestion,
 ): MediaDeckConfig {
-  if (s.kind === 'remote') return { ...c, entities: { ...(c.entities ?? {}), remote: s.entity } };
-  if (s.kind === 'audio') return { ...c, entities: { ...(c.entities ?? {}), audio: s.entity } };
-  if (s.kind === 'media-player')
+  if (suggestion.kind === 'remote')
+    return { ...config, entities: { ...(config.entities ?? {}), remote: suggestion.entity } };
+  if (suggestion.kind === 'audio')
+    return { ...config, entities: { ...(config.entities ?? {}), audio: suggestion.entity } };
+  if (suggestion.kind === 'media-player')
     return {
-      ...c,
+      ...config,
       entities: {
-        ...(c.entities ?? {}),
-        related: [...new Set([...(c.entities?.related ?? []), s.entity])],
+        ...(config.entities ?? {}),
+        related: [...new Set([...(config.entities?.related ?? []), suggestion.entity])],
       },
     };
-  if (s.kind === 'source-mapping' && s.source)
+  if (suggestion.kind === 'source-mapping' && suggestion.source)
     return {
-      ...c,
-      source_mappings: { ...(c.source_mappings ?? {}), [s.source]: { entity: s.entity } },
+      ...config,
+      source_mappings: {
+        ...(config.source_mappings ?? {}),
+        [suggestion.source]: { entity: suggestion.entity },
+      },
     };
-  return c;
+  return config;
 }
+
 export function renderDiscoverySection(
-  h: HomeAssistant,
-  c: MediaDeckConfig,
-  replace: (c: MediaDeckConfig) => void,
+  hass: HomeAssistant,
+  config: MediaDeckConfig,
+  replace: (config: MediaDeckConfig) => void,
+  registry: EntityRegistryMap = {},
 ): TemplateResult {
-  if (!c.entity || !h.states[c.entity])
+  if (!config.entity || !hass.states[config.entity])
     return html`<section>
       <h3>Discovery</h3>
       <p>Select a primary media player first.</p>
     </section>`;
-  const s = discoverMediaRelationships(h, normalizeConfig(c));
+  const suggestions = discoverMediaRelationships(hass, normalizeConfig(config), registry);
   return html`<section>
     <h3>Discovery</h3>
     <p>Suggestions only apply after you accept them.</p>
-    ${s.map(
-      (i) =>
+    ${suggestions.map(
+      (suggestion) =>
         html`<div class="suggestion">
           <div>
-            <strong>${i.entity}</strong
-            ><small>${Math.round(i.confidence * 100)}% · ${i.explanation}</small>
+            <strong>${suggestion.entity}</strong
+            ><small
+              >${Math.round(suggestion.confidence * 100)}% · ${suggestion.explanation}</small
+            >
           </div>
-          <button @click=${() => replace(applyDiscoverySuggestion(c, i))}>Accept</button>
+          <button @click=${() => replace(applyDiscoverySuggestion(config, suggestion))}>
+            Accept
+          </button>
         </div>`,
     )}
   </section>`;
