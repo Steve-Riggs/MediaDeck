@@ -34,7 +34,7 @@ export async function loadEntityRegistry(hass: HomeAssistant): Promise<EntityReg
     const response = await hass.callWS<unknown>({
       type: 'config/entity_registry/list_for_display',
     });
-    const values = Array.isArray(response)
+    const values: unknown[] = Array.isArray(response)
       ? response
       : response && typeof response === 'object' && Array.isArray((response as any).entities)
         ? (response as any).entities
