@@ -7,10 +7,7 @@ import { validateConfig } from './config/validate';
 import { resolveMediaSession } from './session/resolve-session';
 import { executeIntent } from './actions/router';
 import type { MediaIntent } from './actions/types';
-import {
-  loadEntityRegistry,
-  type EntityRegistryMap,
-} from './registry/entity-registry';
+import { loadEntityRegistry, type EntityRegistryMap } from './registry/entity-registry';
 import { renderNowPlaying } from './ui/now-playing';
 import { renderTransportControls } from './ui/transport-controls';
 import { renderRemoteControls } from './ui/remote-controls';
@@ -175,7 +172,8 @@ export class MediaDeckCard extends LitElement {
       </header>
       <div class="card-body">
         ${this.config.section_order.map(
-          (region) => html`<div class=${`region region-${region}`}>${this.section(region, session)}</div>`,
+          (region) =>
+            html`<div class=${`region region-${region}`}>${this.section(region, session)}</div>`,
         )}
       </div>
       ${this.actionError

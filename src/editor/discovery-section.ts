@@ -52,9 +52,7 @@ export function renderDiscoverySection(
         html`<div class="suggestion">
           <div>
             <strong>${suggestion.entity}</strong
-            ><small
-              >${Math.round(suggestion.confidence * 100)}% · ${suggestion.explanation}</small
-            >
+            ><small>${Math.round(suggestion.confidence * 100)}% · ${suggestion.explanation}</small>
           </div>
           <button @click=${() => replace(applyDiscoverySuggestion(config, suggestion))}>
             Accept

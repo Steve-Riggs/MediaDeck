@@ -1,9 +1,6 @@
 import type { HomeAssistant, HassEntity } from '../types/home-assistant';
 import type { NormalizedMediaDeckConfig } from '../config/types';
-import {
-  entityPlatform,
-  type EntityRegistryMap,
-} from '../registry/entity-registry';
+import { entityPlatform, type EntityRegistryMap } from '../registry/entity-registry';
 
 export type DiscoveryKind = 'remote' | 'media-player' | 'audio' | 'source-mapping';
 export interface DiscoverySuggestion {
@@ -55,7 +52,9 @@ export function discoverMediaRelationships(
     const sameDevice = Boolean(
       primaryRegistry?.device_id && metadata?.device_id === primaryRegistry.device_id,
     );
-    const sameArea = Boolean(primaryRegistry?.area_id && metadata?.area_id === primaryRegistry.area_id);
+    const sameArea = Boolean(
+      primaryRegistry?.area_id && metadata?.area_id === primaryRegistry.area_id,
+    );
     const score = overlap(primary, entity);
     const platform = entityPlatform(entity, registry)?.toLowerCase() ?? '';
 
@@ -79,13 +78,15 @@ export function discoverMediaRelationships(
     }
 
     if (entity.entity_id.startsWith('media_player.')) {
-      const text = `${entity.entity_id} ${entity.attributes.friendly_name ?? ''} ${entity.attributes.manufacturer ?? ''} ${platform}`.toLowerCase();
+      const text =
+        `${entity.entity_id} ${entity.attributes.friendly_name ?? ''} ${entity.attributes.manufacturer ?? ''} ${platform}`.toLowerCase();
       if (sameDevice)
         out.push({
           kind: 'media-player',
           entity: entity.entity_id,
           confidence: 0.98,
-          explanation: 'Media player belongs to the same Home Assistant device as the primary player.',
+          explanation:
+            'Media player belongs to the same Home Assistant device as the primary player.',
         });
       else if (/apple.?tv|android|google.?tv|androidtv_remote|cast/.test(text) && score >= 0.1)
         out.push({
@@ -108,7 +109,9 @@ export function discoverMediaRelationships(
     }
   }
 
-  const sources = Array.isArray(primary.attributes.source_list) ? primary.attributes.source_list : [];
+  const sources = Array.isArray(primary.attributes.source_list)
+    ? primary.attributes.source_list
+    : [];
   for (const source of sources as string[]) {
     if (config.source_mappings[source]) continue;
     const match = Object.values(hass.states).find(

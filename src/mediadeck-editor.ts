@@ -3,10 +3,7 @@ import { property, state } from 'lit/decorators.js';
 import type { HomeAssistant } from './types/home-assistant';
 import type { MediaDeckConfig } from './config/types';
 import { validateConfig } from './config/validate';
-import {
-  loadEntityRegistry,
-  type EntityRegistryMap,
-} from './registry/entity-registry';
+import { loadEntityRegistry, type EntityRegistryMap } from './registry/entity-registry';
 import { renderEntitySection } from './editor/entity-section';
 import { renderSourceMappingsSection } from './editor/source-mappings-section';
 import { renderLayoutSection } from './editor/layout-section';

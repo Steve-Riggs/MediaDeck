@@ -65,7 +65,9 @@ export function renderEntitySection(
       >
         ${PLATFORM_OPTIONS.map(
           ([value, label]) =>
-            html`<option value=${value} ?selected=${(config.platform ?? '') === value}>${label}</option>`,
+            html`<option value=${value} ?selected=${(config.platform ?? '') === value}>
+              ${label}
+            </option>`,
         )}
       </select>
     </label>

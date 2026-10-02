@@ -74,8 +74,12 @@ export function resolveMediaSession(
     const candidates = [preferredTransport, preferredMetadata, ...related].filter(
       (value): value is HassEntity => Boolean(value),
     );
-    const playing = candidates.find((candidate) => usable(candidate) && candidate.state === 'playing');
-    const paused = candidates.find((candidate) => usable(candidate) && candidate.state === 'paused');
+    const playing = candidates.find(
+      (candidate) => usable(candidate) && candidate.state === 'playing',
+    );
+    const paused = candidates.find(
+      (candidate) => usable(candidate) && candidate.state === 'paused',
+    );
     if (playing ?? paused) {
       active = playing ?? paused;
       reason = 'active-playback';

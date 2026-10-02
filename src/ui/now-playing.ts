@@ -6,7 +6,10 @@ import type { NormalizedMediaDeckConfig } from '../config/types';
 function mediaPosition(entity: ResolvedMediaSession['metadata']): number {
   if (!entity) return 0;
   let position = Number(entity.attributes.media_position ?? 0);
-  if (entity.state === 'playing' && typeof entity.attributes.media_position_updated_at === 'string') {
+  if (
+    entity.state === 'playing' &&
+    typeof entity.attributes.media_position_updated_at === 'string'
+  ) {
     const updated = Date.parse(entity.attributes.media_position_updated_at);
     if (Number.isFinite(updated)) position += Math.max(0, (Date.now() - updated) / 1000);
   }

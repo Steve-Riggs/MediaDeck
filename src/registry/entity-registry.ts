@@ -31,7 +31,9 @@ function normalizeEntry(value: unknown): EntityRegistryMetadata | undefined {
 export async function loadEntityRegistry(hass: HomeAssistant): Promise<EntityRegistryMap> {
   if (!hass.callWS) return {};
   try {
-    const response = await hass.callWS<unknown>({ type: 'config/entity_registry/list_for_display' });
+    const response = await hass.callWS<unknown>({
+      type: 'config/entity_registry/list_for_display',
+    });
     const values = Array.isArray(response)
       ? response
       : response && typeof response === 'object' && Array.isArray((response as any).entities)
