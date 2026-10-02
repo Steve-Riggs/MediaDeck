@@ -32,6 +32,18 @@ function sameDevice(
   return Boolean(firstDevice && secondDevice && firstDevice === secondDevice);
 }
 
+function sameDeviceOrUnknown(
+  first: HassEntity | undefined,
+  second: HassEntity | undefined,
+  registry: EntityRegistryMap,
+): boolean {
+  if (!first || !second) return false;
+  const firstDevice = registry[first.entity_id]?.device_id;
+  const secondDevice = registry[second.entity_id]?.device_id;
+  if (!firstDevice || !secondDevice) return true;
+  return firstDevice === secondDevice;
+}
+
 function context(
   entity: HassEntity | undefined,
   remote: HassEntity | undefined,
@@ -59,8 +71,13 @@ function boundCompanion(
   owner: HassEntity | undefined,
   preferred: HassEntity | undefined,
   registry: EntityRegistryMap,
+  requireKnownRelationship: boolean,
 ): HassEntity | undefined {
-  return usable(preferred) && sameDevice(owner, preferred, registry) ? preferred : undefined;
+  if (!usable(preferred)) return undefined;
+  const related = requireKnownRelationship
+    ? sameDevice(owner, preferred, registry)
+    : sameDeviceOrUnknown(owner, preferred, registry);
+  return related ? preferred : undefined;
 }
 
 export function resolveMediaSession(
@@ -111,15 +128,18 @@ export function resolveMediaSession(
   }
 
   const metadata =
-    boundCompanion(active, preferredMetadata, registry) ?? active ?? primary;
+    boundCompanion(active, preferredMetadata, registry, Boolean(mapping)) ?? active ?? primary;
   const transport =
-    boundCompanion(active, preferredTransport, registry) ?? active ?? primary;
+    boundCompanion(active, preferredTransport, registry, Boolean(mapping)) ?? active ?? primary;
 
   const mappedRemote = state(hass, mapping?.remote);
   const configuredRemote = state(hass, config.entities.remote);
+  const configuredRemoteAllowed = mapping
+    ? sameDevice(active, configuredRemote, registry)
+    : sameDeviceOrUnknown(active, configuredRemote, registry);
   const remote = usable(mappedRemote)
     ? mappedRemote
-    : usable(configuredRemote) && (!active || sameDevice(active, configuredRemote, registry))
+    : usable(configuredRemote) && configuredRemoteAllowed
       ? configuredRemote
       : undefined;
 
