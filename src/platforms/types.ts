@@ -1,5 +1,6 @@
 import type { HassEntity } from '../types/home-assistant';
 
+export type PlatformId = 'generic' | 'android-tv' | 'apple-tv' | 'samsung-tv' | 'lg-webos';
 export type NavigationCommand =
   | 'UP'
   | 'DOWN'
@@ -28,6 +29,8 @@ export interface MediaCapabilities {
 export interface AdapterContext {
   entity?: HassEntity;
   remote?: HassEntity;
+  registryPlatform?: string;
+  remoteRegistryPlatform?: string;
 }
 
 export interface AdapterServiceCall {
@@ -38,7 +41,7 @@ export interface AdapterServiceCall {
 }
 
 export interface PlatformAdapter {
-  id: 'generic' | 'android-tv' | 'apple-tv' | 'samsung-tv' | 'lg-webos';
+  id: PlatformId;
   name: string;
   matches(context: AdapterContext): boolean;
   capabilities(context: AdapterContext): MediaCapabilities;
