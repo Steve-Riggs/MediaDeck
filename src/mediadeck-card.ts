@@ -4,6 +4,7 @@ import type { HomeAssistant } from './types/home-assistant';
 import type { MediaDeckConfig, NormalizedMediaDeckConfig, RegionName } from './config/types';
 import { normalizeConfig } from './config/defaults';
 import { validateConfig } from './config/validate';
+import { isEditorBootstrapConfig } from './config/bootstrap';
 import { resolveMediaSession } from './session/resolve-session';
 import { executeIntent } from './actions/router';
 import type { MediaIntent } from './actions/types';
@@ -51,7 +52,9 @@ export class MediaDeckCard extends LitElement {
 
   setConfig(config: MediaDeckConfig) {
     const validation = validateConfig(config);
-    if (!validation.valid) throw new Error(validation.errors.join(' '));
+    if (!validation.valid && !isEditorBootstrapConfig(config, validation)) {
+      throw new Error(validation.errors.join(' '));
+    }
     this.config = normalizeConfig(config);
   }
 
@@ -134,12 +137,13 @@ export class MediaDeckCard extends LitElement {
   protected render() {
     if (!this.config) return html`<div class="card notice">Configure MediaDeck to begin.</div>`;
     if (!this.hass) return html`<div class="card notice">Loading Home Assistant…</div>`;
+    if (!this.config.entity) {
+      return html`<div class="card notice">Select a primary media entity to configure MediaDeck.</div>`;
+    }
 
     const primary = this.hass.states[this.config.entity];
     if (!primary) {
-      return html`<div class="card notice">
-        Media entity ${this.config.entity || '(not selected)'} was not found.
-      </div>`;
+      return html`<div class="card notice">Media entity ${this.config.entity} was not found.</div>`;
     }
 
     const session = resolveMediaSession(this.hass, this.config, this.registry);
