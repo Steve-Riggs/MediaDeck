@@ -18,5 +18,7 @@ jobs:
             echo "v0.1.0 already exists"
             exit 0
           fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a v0.1.0 747d4710ff0ffc7104dde6ad0fadcd801975f4ac -m "MediaDeck v0.1.0"
           git push origin v0.1.0
