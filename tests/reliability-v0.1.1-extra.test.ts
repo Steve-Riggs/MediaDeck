@@ -206,10 +206,10 @@ describe('v0.1.1 additional reliability coverage', () => {
       entity('media_player.android_remote', 'on', { friendly_name: 'Sitting Room TV' }),
       entity('media_player.cast', 'idle', { friendly_name: 'Sitting Room TV' }),
     ]);
-    h.callWS = async () => [
+    h.callWS = (async () => [
       { ei: 'media_player.android_remote', pl: 'androidtv_remote', di: 'device-1' },
       { ei: 'media_player.cast', pl: 'cast', di: 'device-1' },
-    ];
+    ]) as NonNullable<typeof h.callWS>;
     editor.hass = h;
     document.body.append(editor);
     await editor.updateComplete;
