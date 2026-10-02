@@ -104,14 +104,18 @@ describe('v0.1.1 additional reliability coverage', () => {
     document.body.append(editor);
     await editor.updateComplete;
     expect(
-      (editor.shadowRoot.querySelector(
-        'select[aria-label="HDMI 1 playback entity"]',
-      ) as HTMLSelectElement).value,
+      (
+        editor.shadowRoot.querySelector(
+          'select[aria-label="HDMI 1 playback entity"]',
+        ) as HTMLSelectElement
+      ).value,
     ).toBe('media_player.apple_tv');
     expect(
-      (editor.shadowRoot.querySelector(
-        'select[aria-label="HDMI 2 playback entity"]',
-      ) as HTMLSelectElement).value,
+      (
+        editor.shadowRoot.querySelector(
+          'select[aria-label="HDMI 2 playback entity"]',
+        ) as HTMLSelectElement
+      ).value,
     ).toBe('media_player.google_tv');
   });
 
@@ -190,7 +194,9 @@ describe('v0.1.1 additional reliability coverage', () => {
     card.hass = hass([entity('media_player.tv', 'on')]);
     document.body.append(card);
     await card.updateComplete;
-    expect(card.shadowRoot.querySelector('article')?.classList.contains('density-compact')).toBe(true);
+    expect(card.shadowRoot.querySelector('article')?.classList.contains('density-compact')).toBe(
+      true,
+    );
   });
 
   test('editor uses registry platform labels to distinguish duplicate friendly names', async () => {
