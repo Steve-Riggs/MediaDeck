@@ -32,6 +32,26 @@ describe('v0.1.2 editor bootstrap regression', () => {
     ).toBe(true);
   });
 
+  test('device editor exposes a power entity selector for media players and remotes', async () => {
+    const editor = document.createElement('mediadeck-editor') as any;
+    editor.setConfig({
+      type: 'custom:mediadeck-card',
+      entity: 'media_player.sitting_room_tv',
+    });
+    editor.hass = hass([
+      entity('media_player.sitting_room_tv', 'off', { friendly_name: 'Samsung TV' }),
+      entity('remote.sitting_room_tv', 'off', { friendly_name: 'Sitting Room TV Remote' }),
+    ]);
+    document.body.append(editor);
+    await editor.updateComplete;
+
+    const power = selectForLabel(editor.shadowRoot, 'Power entity');
+    expect(power).toBeDefined();
+    expect([...power!.options].map((option) => option.value)).toEqual(
+      expect.arrayContaining(['media_player.sitting_room_tv', 'remote.sitting_room_tv']),
+    );
+  });
+
   test('brand-new stub preview is editable instead of throwing a configuration error', async () => {
     const card = document.createElement('mediadeck-card') as any;
     expect(() => card.setConfig(MediaDeckCard.getStubConfig())).not.toThrow();
