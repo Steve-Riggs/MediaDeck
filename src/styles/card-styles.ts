@@ -20,6 +20,17 @@ export const cardStyles = css`
     overflow: hidden;
   }
 
+  .card-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--mediadeck-gap, 14px);
+  }
+
+  .region,
+  .region > section {
+    min-width: 0;
+  }
+
   .header {
     display: flex;
     justify-content: space-between;
@@ -100,6 +111,12 @@ export const cardStyles = css`
     background: var(--mediadeck-accent, var(--primary-color, #03a9f4));
   }
 
+  .seek {
+    width: 100%;
+    margin-top: 10px;
+    accent-color: var(--mediadeck-accent, var(--primary-color, #03a9f4));
+  }
+
   button,
   select,
   input {
@@ -140,7 +157,7 @@ export const cardStyles = css`
 
   .transport {
     justify-content: center;
-    margin: var(--mediadeck-gap, 14px) 0 4px;
+    margin: 4px 0;
   }
 
   .remote-panel,
@@ -148,7 +165,7 @@ export const cardStyles = css`
   .audio-panel,
   .watch-actions,
   .inspector {
-    margin-top: var(--mediadeck-gap, 14px);
+    margin: 0;
   }
 
   .quick-row {
@@ -243,20 +260,54 @@ export const cardStyles = css`
     font-size: 0.78rem;
   }
 
+  .density-compact {
+    padding: 12px;
+  }
+
+  .density-compact .header {
+    margin-bottom: 9px;
+  }
+
+  .density-compact .now-playing {
+    grid-template-columns: minmax(72px, 105px) 1fr;
+  }
+
+  .density-compact button,
+  .density-compact .source-panel select,
+  .density-compact .text-entry input {
+    min-height: 36px;
+  }
+
+  .density-compact .media-copy h2 {
+    font-size: calc(1.15rem * var(--mediadeck-font-scale, 1));
+  }
+
+  .density-expanded {
+    padding: 24px;
+  }
+
+  .density-expanded button {
+    min-height: 48px;
+    padding-inline: 18px;
+  }
+
+  .density-expanded .media-copy h2 {
+    font-size: calc(1.7rem * var(--mediadeck-font-scale, 1));
+  }
+
   @container (max-width: 520px) {
     .now-playing {
       grid-template-columns: 90px 1fr;
     }
 
-    .card {
+    .card:not(.density-compact) {
       padding: 14px;
     }
   }
 
   @container (min-width: 760px) {
     .card-body {
-      display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: calc(var(--mediadeck-gap, 14px) * 1.5);
     }
   }
