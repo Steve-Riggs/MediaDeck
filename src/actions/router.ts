@@ -20,10 +20,24 @@ function textCall(session: ResolvedMediaSession, intent: Extract<MediaIntent, { 
   return session.adapter.textAction?.(session.adapterContext, intent.text);
 }
 
+function configuredPowerAction(
+  session: ResolvedMediaSession,
+  intent: Extract<MediaIntent, { kind: 'power' }>,
+): MediaDeckAction | undefined {
+  return intent.on ? session.powerActions.on : session.powerActions.off;
+}
+
 export function canExecuteIntent(session: ResolvedMediaSession, intent: MediaIntent): boolean {
   switch (intent.kind) {
-    case 'power':
-      return Boolean(session.primary);
+    case 'power': {
+      const action = configuredPowerAction(session, intent);
+      if (action) return Boolean(parts(action.service));
+      return Boolean(
+        session.power &&
+          (session.power.entity_id.startsWith('media_player.') ||
+            session.power.entity_id.startsWith('remote.')),
+      );
+    }
     case 'play-pause':
       return session.capabilities.playPause && Boolean(session.transport);
     case 'stop':
@@ -87,14 +101,22 @@ export async function executeIntent(
 
   try {
     switch (intent.kind) {
-      case 'power':
+      case 'power': {
+        const action = configuredPowerAction(session, intent);
+        if (action) {
+          await configured(hass, action);
+          break;
+        }
+        const power = session.power!;
+        const domain = power.entity_id.startsWith('remote.') ? 'remote' : 'media_player';
         await hass.callService(
-          'media_player',
+          domain,
           intent.on ? 'turn_on' : 'turn_off',
           {},
-          { entity_id: session.primary!.entity_id },
+          { entity_id: power.entity_id },
         );
         break;
+      }
       case 'play-pause':
         await hass.callService(
           'media_player',
