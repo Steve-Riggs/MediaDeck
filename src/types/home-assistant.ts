@@ -13,6 +13,8 @@ export interface HomeAssistant {
     data?: Record<string, any>,
     target?: Record<string, any>,
   ): Promise<any>;
+  callWS?<T = any>(message: Record<string, any>): Promise<T>;
+  formatEntityName?(entity: HassEntity): string;
   language?: string;
   locale?: Record<string, any>;
   config?: Record<string, any>;
