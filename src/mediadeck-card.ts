@@ -89,12 +89,13 @@ export class MediaDeckCard extends LitElement {
 
   private async run(intent: MediaIntent) {
     if (!this.hass || !this.config) return;
-    if (
-      intent.kind === 'custom' &&
-      intent.action.confirmation &&
-      !window.confirm(intent.action.confirmation)
-    )
-      return;
+    const configuredAction =
+      intent.kind === 'custom'
+        ? intent.action
+        : intent.kind === 'power'
+          ? this.config.power_actions[intent.on ? 'on' : 'off']
+          : undefined;
+    if (configuredAction?.confirmation && !window.confirm(configuredAction.confirmation)) return;
 
     const result = await executeIntent(
       this.hass,
@@ -147,7 +148,8 @@ export class MediaDeckCard extends LitElement {
 
     const session = resolveMediaSession(this.hass, this.config, this.registry);
     const appearance = this.config.appearance;
-    const powerState = session.power?.state ?? primary.state;
+    const powerState = session.power?.state;
+    const turnPowerOn = !powerState || ['off', 'unknown', 'unavailable'].includes(powerState);
     const style = [
       `--mediadeck-min-height:${appearance.min_height}px`,
       `--mediadeck-radius:${appearance.border_radius}px`,
@@ -169,7 +171,10 @@ export class MediaDeckCard extends LitElement {
         <h1>${this.config.title ?? primary.attributes.friendly_name ?? 'MediaDeck'}</h1>
         <div>
           <span class="status">${session.adapter.name}</span>
-          <button @click=${() => void this.run({ kind: 'power', on: powerState === 'off' })}>
+          <button
+            aria-label=${turnPowerOn ? 'Turn on' : 'Turn off'}
+            @click=${() => void this.run({ kind: 'power', on: turnPowerOn })}
+          >
             ⏻
           </button>
         </div>
