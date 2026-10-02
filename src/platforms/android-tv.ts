@@ -8,6 +8,8 @@ import {
 
 function platformText(context: AdapterContext): string {
   return [
+    context.registryPlatform,
+    context.remoteRegistryPlatform,
     context.entity?.entity_id,
     context.entity?.attributes.integration,
     context.entity?.attributes.platform,
@@ -53,8 +55,8 @@ export const androidTvAdapter: PlatformAdapter = {
   matches: (context) => /android|google tv|adb/.test(platformText(context)),
   capabilities: (context) => ({
     ...genericCapabilities(context),
-    remoteNavigation: Boolean(context.remote),
-    textEntry: Boolean(context.remote),
+    remoteNavigation: Boolean(context.remote && context.remote.state !== 'unavailable'),
+    textEntry: Boolean(context.remote && context.remote.state !== 'unavailable'),
   }),
   remoteAction: (context, command) =>
     remoteSendCommand(context, (isModernRemote(context) ? MODERN_COMMANDS : ADB_COMMANDS)[command]),
