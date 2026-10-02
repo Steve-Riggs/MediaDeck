@@ -1,0 +1,35 @@
+name: Publish v0.1.0 once
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  publish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: v0.1.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test -- --run
+      - run: npm run build
+      - name: Publish GitHub release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v0.1.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload v0.1.0 dist/mediadeck.js --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create v0.1.0 dist/mediadeck.js \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "MediaDeck v0.1.0" \
+              --notes "First public MediaDeck release. Includes unified TV/media session resolution, Android TV / Google TV, Apple TV, Samsung TV and LG webOS adapters, platform-aware remote controls, explicit source mappings, AVR audio routing, Android TV text entry, Watch actions, discovery suggestions, device inspector, responsive UI, graphical editor, custom appearance controls, HACS metadata and automated verification."
