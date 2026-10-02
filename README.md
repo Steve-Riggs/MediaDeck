@@ -106,7 +106,7 @@ power_actions:
     confirmation: Turn off the sitting room TV?
 ```
 
-If the power controller reports `off`, `unknown` or `unavailable`, or is missing, the power button attempts the on action. Other reported states use the off action. Unknown state does not guarantee that the physical TV is off; choose a reliable controller or a wake script for your setup.
+If the power controller reports `off`, `unknown` or `unavailable`, or is missing, the power button selects the on action. Other reported states use the off action. A missing controller needs an on-service override; otherwise MediaDeck reports that the action is unsupported. Unknown state does not guarantee that the physical TV is off; choose a reliable controller or a wake script for your setup.
 
 ## Watch actions
 
