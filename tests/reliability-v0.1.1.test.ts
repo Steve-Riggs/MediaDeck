@@ -122,7 +122,15 @@ describe('v0.1.1 reliability regressions', () => {
       type: 'custom:mediadeck-card',
       entity: 'media_player.tv',
       entities: { audio: 'media_player.avr' },
-      section_order: ['audio', 'now_playing', 'transport', 'remote', 'sources', 'watch_actions', 'inspector'],
+      section_order: [
+        'audio',
+        'now_playing',
+        'transport',
+        'remote',
+        'sources',
+        'watch_actions',
+        'inspector',
+      ],
     });
     card.hass = hass([
       entity('media_player.tv', 'playing', { supported_features: PLAY | PAUSE }),
@@ -130,8 +138,8 @@ describe('v0.1.1 reliability regressions', () => {
     ]);
     document.body.append(card);
     await card.updateComplete;
-    const sections = [...card.shadowRoot.querySelectorAll('.card-body section')].map((section: Element) =>
-      section.className,
+    const sections = [...card.shadowRoot.querySelectorAll('.card-body section')].map(
+      (section: Element) => section.className,
     );
     expect(sections[0]).toContain('audio-panel');
     expect(sections[1]).toContain('now-playing');
