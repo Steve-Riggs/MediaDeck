@@ -30,6 +30,21 @@ describe('MediaDeck config', () => {
     expect(r.source_mappings['HDMI 1'].entity).toBe('media_player.apple_tv');
     expect(r.watch_actions[0].action.service).toBe('script.watch_apple_tv');
   });
+  test('accepts a dedicated power entity and declarative power actions', () => {
+    const config = {
+      ...base,
+      entities: { power: 'remote.tv' },
+      power_actions: {
+        on: { action: 'call-service' as const, service: 'script.wake_tv' },
+        off: { action: 'call-service' as const, service: 'script.sleep_tv' },
+      },
+    };
+    expect(validateConfig(config).valid).toBe(true);
+    const normalized = normalizeConfig(config);
+    expect(normalized.entities.power).toBe('remote.tv');
+    expect(normalized.power_actions.on?.service).toBe('script.wake_tv');
+    expect(normalized.power_actions.off?.service).toBe('script.sleep_tv');
+  });
   test('rejects invalid custom actions', () => {
     expect(
       validateConfig({
@@ -38,6 +53,15 @@ describe('MediaDeck config', () => {
       }).valid,
     ).toBe(false);
     expect(validateConfig(base).valid).toBe(true);
+  });
+  test('rejects malformed power configuration', () => {
+    expect(validateConfig({ ...base, entities: { power: 'not-an-entity' } }).valid).toBe(false);
+    expect(
+      validateConfig({
+        ...base,
+        power_actions: { on: { action: 'javascript', service: 'evil()' } },
+      }).valid,
+    ).toBe(false);
   });
   test('migrates while preserving unknown data', () => {
     const r = migrateConfig({ entity: 'media_player.tv', legacy: 42 });
