@@ -1,6 +1,6 @@
 {
   "name": "mediadeck-card",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0",
   "description": "A media-first Home Assistant Lovelace card for unified TV and streaming control.",
   "type": "module",
   "files": [
