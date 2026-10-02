@@ -58,7 +58,7 @@ describe('resolver', () => {
     expect(r.audio?.entity_id).toBe('media_player.avr');
     expect(r.capabilities.volumeSet).toBe(true);
   });
-  test('unavailable mapped device falls back', () => {
+  test('unavailable mapped device remains selected and unavailable', () => {
     const h = hass([
       entity('media_player.tv', 'on', { source: 'HDMI 1' }),
       entity('media_player.apple_tv', 'unavailable'),
@@ -71,7 +71,8 @@ describe('resolver', () => {
         source_mappings: { 'HDMI 1': { entity: 'media_player.apple_tv' } },
       }),
     );
-    expect(r.active?.entity_id).toBe('media_player.tv');
-    expect(r.reason).toContain('mapping-unavailable-fallback');
+    expect(r.active?.entity_id).toBe('media_player.apple_tv');
+    expect(r.state).toBe('unavailable');
+    expect(r.reason).toBe('explicit-source-mapping-unavailable:HDMI 1');
   });
 });
