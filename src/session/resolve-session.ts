@@ -21,6 +21,17 @@ function mediaState(e?: HassEntity): MediaDeckSystemState {
 
 const state = (h: HomeAssistant, id?: string) => (id ? h.states[id] : undefined);
 
+function sameDevice(
+  first: HassEntity | undefined,
+  second: HassEntity | undefined,
+  registry: EntityRegistryMap,
+): boolean {
+  if (!first || !second) return false;
+  const firstDevice = registry[first.entity_id]?.device_id;
+  const secondDevice = registry[second.entity_id]?.device_id;
+  return Boolean(firstDevice && secondDevice && firstDevice === secondDevice);
+}
+
 function context(
   entity: HassEntity | undefined,
   remote: HassEntity | undefined,
@@ -42,6 +53,14 @@ function capabilitiesFor(
 ): MediaCapabilities {
   const ctx = context(entity, remote, registry);
   return selectPlatformAdapter(ctx, override).capabilities(ctx);
+}
+
+function boundCompanion(
+  owner: HassEntity | undefined,
+  preferred: HassEntity | undefined,
+  registry: EntityRegistryMap,
+): HassEntity | undefined {
+  return usable(preferred) && sameDevice(owner, preferred, registry) ? preferred : undefined;
 }
 
 export function resolveMediaSession(
@@ -91,24 +110,16 @@ export function resolveMediaSession(
     }
   }
 
-  let metadata: HassEntity | undefined;
-  let transport: HassEntity | undefined;
-  if (mapping) {
-    metadata = mapped;
-    transport = mapped;
-  } else if (active?.entity_id === primary?.entity_id) {
-    metadata = primary;
-    transport = primary;
-  } else {
-    metadata = usable(preferredMetadata) ? preferredMetadata : active;
-    transport = usable(preferredTransport) ? preferredTransport : active;
-  }
+  const metadata =
+    boundCompanion(active, preferredMetadata, registry) ?? active ?? primary;
+  const transport =
+    boundCompanion(active, preferredTransport, registry) ?? active ?? primary;
 
   const mappedRemote = state(hass, mapping?.remote);
   const configuredRemote = state(hass, config.entities.remote);
   const remote = usable(mappedRemote)
     ? mappedRemote
-    : usable(configuredRemote)
+    : usable(configuredRemote) && (!active || sameDevice(active, configuredRemote, registry))
       ? configuredRemote
       : undefined;
 
