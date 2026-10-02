@@ -1,4 +1,5 @@
 import type { PlatformId } from '../platforms/types';
+import type { ArtworkSettings } from '../artwork/lookup';
 
 export const MEDIADECK_SCHEMA_VERSION = 1;
 export type Density = 'compact' | 'standard' | 'expanded';
@@ -77,6 +78,8 @@ export interface MediaDeckConfig {
   appearance?: AppearanceConfig;
   discovery?: DiscoveryConfig;
   title?: string;
+  app_names?: Record<string, string>;
+  artwork?: ArtworkSettings;
   [key: string]: unknown;
 }
 export interface NormalizedMediaDeckConfig extends MediaDeckConfig {

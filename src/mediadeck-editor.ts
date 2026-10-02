@@ -11,6 +11,7 @@ import { renderLayoutSection } from './editor/layout-section';
 import { renderActionsSection } from './editor/actions-section';
 import { renderAppearanceSection } from './editor/appearance-section';
 import { renderDiscoverySection } from './editor/discovery-section';
+import { renderArtworkSection, renderAppNamesSection } from './editor/artwork-section';
 
 export class MediaDeckEditor extends LitElement {
   static styles = css`
@@ -102,6 +103,32 @@ export class MediaDeckEditor extends LitElement {
       grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
+    .colour-row {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr) auto;
+      gap: 8px;
+    }
+    .colour-row input[type='color'] {
+      width: 48px;
+      padding: 3px;
+    }
+    .preset-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    input[type='range'] {
+      width: 100%;
+      padding: 0;
+      accent-color: var(--primary-color);
+    }
+    input[type='checkbox'] {
+      min-height: auto;
+    }
+    summary {
+      cursor: pointer;
+      margin: 10px 0;
+    }
     @media (max-width: 760px) {
       .mapping-row,
       .action-row,
@@ -177,7 +204,8 @@ export class MediaDeckEditor extends LitElement {
       ${errors} ${renderEntitySection(this.hass, this.config, replace, this.registry)}
       ${renderSourceMappingsSection(this.hass, this.config, replace, this.registry)}
       ${renderLayoutSection(this.config, replace)} ${renderActionsSection(this.config, replace)}
-      ${renderAppearanceSection(this.config, replace)}
+      ${renderAppearanceSection(this.config, replace)} ${renderArtworkSection(this.config, replace)}
+      ${renderAppNamesSection(this.config, replace)}
       ${renderDiscoverySection(this.hass, this.config, replace, this.registry)}
     `;
   }

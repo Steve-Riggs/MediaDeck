@@ -51,7 +51,7 @@ export const cardStyles = css`
 
   .now-playing {
     display: grid;
-    grid-template-columns: minmax(120px, var(--mediadeck-artwork, 180px)) 1fr;
+    grid-template-columns: minmax(0, min(var(--mediadeck-artwork, 180px), 45%)) minmax(0, 1fr);
     gap: var(--mediadeck-gap, 14px);
     align-items: center;
   }
@@ -63,6 +63,31 @@ export const cardStyles = css`
     background: var(--secondary-background-color, #eee);
     display: grid;
     place-items: center;
+  }
+  .artwork span {
+    text-align: center;
+    padding: 12px;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+  }
+  .media-copy {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .artwork-status,
+  .artwork-credit {
+    display: block;
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-top: 6px;
+  }
+  .artwork-credit a {
+    color: inherit;
+  }
+  .tmdb-logo {
+    width: 48px;
+    height: auto;
+    margin-top: 6px;
   }
 
   .artwork img {
@@ -268,10 +293,6 @@ export const cardStyles = css`
     margin-bottom: 9px;
   }
 
-  .density-compact .now-playing {
-    grid-template-columns: minmax(72px, 105px) 1fr;
-  }
-
   .density-compact button,
   .density-compact .source-panel select,
   .density-compact .text-entry input {
@@ -296,10 +317,6 @@ export const cardStyles = css`
   }
 
   @container (max-width: 520px) {
-    .now-playing {
-      grid-template-columns: 90px 1fr;
-    }
-
     .card:not(.density-compact) {
       padding: 14px;
     }

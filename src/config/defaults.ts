@@ -51,7 +51,12 @@ export function normalizeConfig(input: MediaDeckConfig): NormalizedMediaDeckConf
     power_actions: { ...(input.power_actions ?? {}) },
     regions: { ...DEFAULT_REGIONS, ...(input.regions ?? {}) },
     section_order: [...(input.section_order ?? DEFAULT_SECTION_ORDER)],
-    appearance: { ...DEFAULT_APPEARANCE, ...(input.appearance ?? {}) },
+    appearance: {
+      ...DEFAULT_APPEARANCE,
+      ...Object.fromEntries(
+        Object.entries(input.appearance ?? {}).filter(([, value]) => value !== undefined),
+      ),
+    },
     discovery: {
       enabled: input.discovery?.enabled ?? true,
       minimum_confidence: input.discovery?.minimum_confidence ?? 0.55,
