@@ -29,6 +29,7 @@ export function renderEntitySection(
   const remotes = uniqueEntities(
     Object.values(hass.states).filter((entity) => entity.entity_id.startsWith('remote.')),
   );
+  const powerEntities = uniqueEntities([...media, ...remotes]);
   const roles = config.entities ?? {};
   const select = (
     label: string,
@@ -71,6 +72,12 @@ export function renderEntitySection(
         )}
       </select>
     </label>
+    ${select('Power entity', roles.power, powerEntities, (power) =>
+      replace({ ...config, entities: { ...roles, power: power || undefined } }),
+    )}
+    <p class="hint">
+      Optional. Choose the media player or remote that can reliably turn the system on and off.
+    </p>
     ${select('Metadata entity', roles.metadata, media, (metadata) =>
       replace({ ...config, entities: { ...roles, metadata: metadata || undefined } }),
     )}
