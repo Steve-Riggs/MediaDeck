@@ -138,7 +138,9 @@ export class MediaDeckCard extends LitElement {
     if (!this.config) return html`<div class="card notice">Configure MediaDeck to begin.</div>`;
     if (!this.hass) return html`<div class="card notice">Loading Home Assistant…</div>`;
     if (!this.config.entity) {
-      return html`<div class="card notice">Select a primary media entity to configure MediaDeck.</div>`;
+      return html`<div class="card notice">
+        Select a primary media entity to configure MediaDeck.
+      </div>`;
     }
 
     const primary = this.hass.states[this.config.entity];
