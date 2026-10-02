@@ -38,6 +38,52 @@ describe('actions', () => {
     });
   });
 
+  test('power can target a remote entity independently from the primary media player', async () => {
+    const home = hass([
+      entity('media_player.tv', 'off', { supported_features: FEATURES }),
+      entity('remote.tv', 'off'),
+    ]);
+    const session = resolveMediaSession(
+      home,
+      normalizeConfig({
+        type: 'custom:mediadeck-card',
+        entity: 'media_player.tv',
+        entities: { power: 'remote.tv' } as any,
+      }),
+    );
+
+    expect((await executeIntent(home, session, { kind: 'power', on: true })).ok).toBe(true);
+    expect(home.calls.at(-1)).toMatchObject({
+      domain: 'remote',
+      service: 'turn_on',
+      target: { entity_id: 'remote.tv' },
+    });
+  });
+
+  test('custom power action overrides the automatic entity power service', async () => {
+    const home = hass([
+      entity('media_player.tv', 'off', { supported_features: FEATURES }),
+      entity('remote.tv', 'off'),
+    ]);
+    const session = resolveMediaSession(
+      home,
+      normalizeConfig({
+        type: 'custom:mediadeck-card',
+        entity: 'media_player.tv',
+        entities: { power: 'remote.tv' } as any,
+        power_actions: {
+          on: { action: 'call-service', service: 'script.wake_sitting_room_tv' },
+        },
+      } as any),
+    );
+
+    expect((await executeIntent(home, session, { kind: 'power', on: true })).ok).toBe(true);
+    expect(home.calls.at(-1)).toMatchObject({
+      domain: 'script',
+      service: 'wake_sitting_room_tv',
+    });
+  });
+
   test('generic remote navigation uses remote.send_command', async () => {
     const home = hass([
       entity('media_player.tv', 'playing', { supported_features: FEATURES }),
