@@ -13,7 +13,7 @@ if (!window.customCards.some((c) => c.type === 'mediadeck-card'))
     documentationURL: 'https://github.com/Steve-Riggs/MediaDeck',
   });
 console.info(
-  '%c MediaDeck %c 0.1.1 ',
+  '%c MediaDeck %c 0.1.2 ',
   'background:#111;color:#fff;padding:2px 6px',
   'background:#03a9f4;color:#fff;padding:2px 6px',
 );
