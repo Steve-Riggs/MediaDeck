@@ -3,6 +3,7 @@ import { property, state } from 'lit/decorators.js';
 import type { HomeAssistant } from './types/home-assistant';
 import type { MediaDeckConfig } from './config/types';
 import { validateConfig } from './config/validate';
+import { isEditorBootstrapConfig } from './config/bootstrap';
 import { loadEntityRegistry, type EntityRegistryMap } from './registry/entity-registry';
 import { renderEntitySection } from './editor/entity-section';
 import { renderSourceMappingsSection } from './editor/source-mappings-section';
@@ -56,6 +57,12 @@ export class MediaDeckEditor extends LitElement {
       border-color: var(--error-color, #db4437);
     }
     .config-error ul {
+      margin-bottom: 0;
+    }
+    .config-incomplete {
+      border-color: var(--warning-color, var(--primary-color));
+    }
+    .config-incomplete p {
       margin-bottom: 0;
     }
     .suggestion,
@@ -137,7 +144,8 @@ export class MediaDeckEditor extends LitElement {
   protected render() {
     if (!this.hass) return html`<p>Loading Home Assistant…</p>`;
     const validation = validateConfig(this.config);
-    if (!validation.valid) {
+    const bootstrap = isEditorBootstrapConfig(this.config, validation);
+    if (!validation.valid && !bootstrap) {
       return html`<section class="config-error">
         <h3>MediaDeck configuration error</h3>
         <ul>
@@ -147,6 +155,16 @@ export class MediaDeckEditor extends LitElement {
     }
 
     const replace = (config: MediaDeckConfig) => this.replace(config);
+    if (bootstrap) {
+      return html`
+        <section class="config-incomplete">
+          <h3>Choose a primary media entity</h3>
+          <p>Select the TV or media player that anchors this MediaDeck setup.</p>
+        </section>
+        ${renderEntitySection(this.hass, this.config, replace, this.registry)}
+      `;
+    }
+
     return html`
       ${renderEntitySection(this.hass, this.config, replace, this.registry)}
       ${renderSourceMappingsSection(this.hass, this.config, replace, this.registry)}
