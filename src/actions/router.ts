@@ -9,19 +9,15 @@ function parts(service: string): [string, string] | undefined {
   return value.length === 2 && value.every(Boolean) ? [value[0], value[1]] : undefined;
 }
 
-function adapterContext(session: ResolvedMediaSession) {
-  return { entity: session.active ?? session.primary, remote: session.remote };
-}
-
 function remoteCall(
   session: ResolvedMediaSession,
   intent: Extract<MediaIntent, { kind: 'remote' }>,
 ) {
-  return session.adapter.remoteAction(adapterContext(session), intent.command);
+  return session.adapter.remoteAction(session.adapterContext, intent.command);
 }
 
 function textCall(session: ResolvedMediaSession, intent: Extract<MediaIntent, { kind: 'text' }>) {
-  return session.adapter.textAction?.(adapterContext(session), intent.text);
+  return session.adapter.textAction?.(session.adapterContext, intent.text);
 }
 
 export function canExecuteIntent(session: ResolvedMediaSession, intent: MediaIntent): boolean {
@@ -96,9 +92,7 @@ export async function executeIntent(
           'media_player',
           intent.on ? 'turn_on' : 'turn_off',
           {},
-          {
-            entity_id: session.primary!.entity_id,
-          },
+          { entity_id: session.primary!.entity_id },
         );
         break;
       case 'play-pause':
@@ -106,9 +100,7 @@ export async function executeIntent(
           'media_player',
           'media_play_pause',
           {},
-          {
-            entity_id: session.transport!.entity_id,
-          },
+          { entity_id: session.transport!.entity_id },
         );
         break;
       case 'stop':
@@ -116,9 +108,7 @@ export async function executeIntent(
           'media_player',
           'media_stop',
           {},
-          {
-            entity_id: session.transport!.entity_id,
-          },
+          { entity_id: session.transport!.entity_id },
         );
         break;
       case 'next':
@@ -126,9 +116,7 @@ export async function executeIntent(
           'media_player',
           'media_next_track',
           {},
-          {
-            entity_id: session.transport!.entity_id,
-          },
+          { entity_id: session.transport!.entity_id },
         );
         break;
       case 'previous':
@@ -136,9 +124,7 @@ export async function executeIntent(
           'media_player',
           'media_previous_track',
           {},
-          {
-            entity_id: session.transport!.entity_id,
-          },
+          { entity_id: session.transport!.entity_id },
         );
         break;
       case 'seek':
@@ -146,9 +132,7 @@ export async function executeIntent(
           'media_player',
           'media_seek',
           { seek_position: intent.position },
-          {
-            entity_id: session.transport!.entity_id,
-          },
+          { entity_id: session.transport!.entity_id },
         );
         break;
       case 'volume-set':
@@ -156,9 +140,7 @@ export async function executeIntent(
           'media_player',
           'volume_set',
           { volume_level: intent.volume },
-          {
-            entity_id: session.audio!.entity_id,
-          },
+          { entity_id: session.audio!.entity_id },
         );
         break;
       case 'volume-up':
@@ -175,9 +157,7 @@ export async function executeIntent(
           'media_player',
           'volume_mute',
           { is_volume_muted: intent.muted },
-          {
-            entity_id: session.audio!.entity_id,
-          },
+          { entity_id: session.audio!.entity_id },
         );
         break;
       case 'source-select':
@@ -185,9 +165,7 @@ export async function executeIntent(
           'media_player',
           'select_source',
           { source: intent.source },
-          {
-            entity_id: session.primary!.entity_id,
-          },
+          { entity_id: session.primary!.entity_id },
         );
         break;
       case 'remote':
