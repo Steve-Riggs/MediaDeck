@@ -147,6 +147,7 @@ export class MediaDeckCard extends LitElement {
 
     const session = resolveMediaSession(this.hass, this.config, this.registry);
     const appearance = this.config.appearance;
+    const powerState = session.power?.state ?? primary.state;
     const style = [
       `--mediadeck-min-height:${appearance.min_height}px`,
       `--mediadeck-radius:${appearance.border_radius}px`,
@@ -168,7 +169,7 @@ export class MediaDeckCard extends LitElement {
         <h1>${this.config.title ?? primary.attributes.friendly_name ?? 'MediaDeck'}</h1>
         <div>
           <span class="status">${session.adapter.name}</span>
-          <button @click=${() => void this.run({ kind: 'power', on: primary.state === 'off' })}>
+          <button @click=${() => void this.run({ kind: 'power', on: powerState === 'off' })}>
             ⏻
           </button>
         </div>
