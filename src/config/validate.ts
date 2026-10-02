@@ -28,8 +28,7 @@ function isEntityId(value: unknown): value is string {
 
 function isPowerEntityId(value: unknown): value is string {
   return (
-    typeof value === 'string' &&
-    (value.startsWith('media_player.') || value.startsWith('remote.'))
+    typeof value === 'string' && (value.startsWith('media_player.') || value.startsWith('remote.'))
   );
 }
 
