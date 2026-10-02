@@ -1,0 +1,22 @@
+name: Tag v0.1.0 once
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  tag:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Create v0.1.0 tag on verified release commit
+        run: |
+          if git rev-parse "v0.1.0" >/dev/null 2>&1; then
+            echo "v0.1.0 already exists"
+            exit 0
+          fi
+          git tag -a v0.1.0 747d4710ff0ffc7104dde6ad0fadcd801975f4ac -m "MediaDeck v0.1.0"
+          git push origin v0.1.0
