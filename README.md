@@ -11,6 +11,7 @@ MediaDeck is a media-first Home Assistant Lovelace card that presents a TV, stre
 - Generic, Android TV, Apple TV, Samsung TV and LG webOS platform adapters.
 - Capability-aware transport controls and remote D-pad controls.
 - Separate AVR/audio routing for volume and mute.
+- Independent TV power controller with optional wake/sleep service overrides.
 - Explicit HDMI/source mappings that always override activity heuristics.
 - Declarative **Watch** actions backed by normal Home Assistant services/scripts.
 - Graphical editor, discovery suggestions and optional device inspector.
@@ -78,6 +79,35 @@ entities:
 
 Metadata and transport can follow the active player while volume remains attached to the AVR.
 
+## Independent power control
+
+In the visual editor, choose **Power entity** under **Devices**. This can be a `media_player.*` or `remote.*` entity; when omitted, power uses the primary media entity. Navigation still uses the separate **Remote entity**.
+
+```yaml
+type: custom:mediadeck-card
+entity: media_player.living_room_tv
+entities:
+  power: remote.living_room_tv
+  remote: remote.shield
+```
+
+Optional **Power on service** and **Power off service** fields override the controller's normal `turn_on` and `turn_off` services. For actions needing a target, data or confirmation, use YAML:
+
+```yaml
+power_actions:
+  on:
+    action: call-service
+    service: script.wake_living_room_tv
+  off:
+    action: call-service
+    service: script.turn_on
+    target:
+      entity_id: script.sleep_living_room_tv
+    confirmation: Turn off the sitting room TV?
+```
+
+If the power controller reports `off`, `unknown` or `unavailable`, or is missing, the power button attempts the on action. Other reported states use the off action. Unknown state does not guarantee that the physical TV is off; choose a reliable controller or a wake script for your setup.
+
 ## Watch actions
 
 Keep complex multi-device sequencing in Home Assistant scripts, then expose them in MediaDeck:
@@ -98,7 +128,7 @@ MediaDeck never executes JavaScript from card configuration.
 
 ## Visual editor and discovery
 
-The graphical editor covers primary/transport/remote/audio entities, region visibility, appearance and discovery. Discovery is advisory: no suggestion changes your configuration until you explicitly accept it.
+The graphical editor covers primary/power/transport/remote/audio entities, power services, region visibility, appearance and discovery. Incomplete service entries show a validation message and stay editable; they are only sent to the dashboard once corrected. Discovery is advisory: no suggestion changes your configuration until you explicitly accept it.
 
 ## Device inspector
 

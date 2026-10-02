@@ -115,6 +115,7 @@ export class MediaDeckEditor extends LitElement {
   @state() private config: MediaDeckConfig = { type: 'custom:mediadeck-card', entity: '' };
   @state() private registry: EntityRegistryMap = {};
   private registrySource?: HomeAssistant;
+  private editableInvalidConfig = false;
 
   protected willUpdate(changed: PropertyValues<this>) {
     if (changed.has('hass') && this.hass && this.registrySource !== this.hass) {
@@ -128,10 +129,15 @@ export class MediaDeckEditor extends LitElement {
 
   setConfig(config: MediaDeckConfig) {
     this.config = { ...config };
+    this.editableInvalidConfig = false;
   }
 
   private replace(config: MediaDeckConfig) {
     this.config = config;
+    const validation = validateConfig(config);
+    this.editableInvalidConfig = !validation.valid && !isEditorBootstrapConfig(config, validation);
+    // Keep incomplete form input local so the preview and saved config stay valid.
+    if (this.editableInvalidConfig) return;
     this.dispatchEvent(
       new CustomEvent('config-changed', {
         detail: { config },
@@ -145,14 +151,16 @@ export class MediaDeckEditor extends LitElement {
     if (!this.hass) return html`<p>Loading Home Assistant…</p>`;
     const validation = validateConfig(this.config);
     const bootstrap = isEditorBootstrapConfig(this.config, validation);
-    if (!validation.valid && !bootstrap) {
-      return html`<section class="config-error">
-        <h3>MediaDeck configuration error</h3>
-        <ul>
-          ${validation.errors.map((error) => html`<li>${error}</li>`)}
-        </ul>
-      </section>`;
-    }
+    const errors =
+      !validation.valid && !bootstrap
+        ? html`<section class="config-error" role="alert">
+            <h3>MediaDeck configuration error</h3>
+            <ul>
+              ${validation.errors.map((error) => html`<li>${error}</li>`)}
+            </ul>
+          </section>`
+        : html``;
+    if (!validation.valid && !bootstrap && !this.editableInvalidConfig) return errors;
 
     const replace = (config: MediaDeckConfig) => this.replace(config);
     if (bootstrap) {
@@ -166,7 +174,7 @@ export class MediaDeckEditor extends LitElement {
     }
 
     return html`
-      ${renderEntitySection(this.hass, this.config, replace, this.registry)}
+      ${errors} ${renderEntitySection(this.hass, this.config, replace, this.registry)}
       ${renderSourceMappingsSection(this.hass, this.config, replace, this.registry)}
       ${renderLayoutSection(this.config, replace)} ${renderActionsSection(this.config, replace)}
       ${renderAppearanceSection(this.config, replace)}
