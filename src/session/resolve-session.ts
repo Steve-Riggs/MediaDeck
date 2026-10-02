@@ -150,6 +150,7 @@ export function resolveMediaSession(
     source,
     state: mediaState(mapping && !usable(mapped) ? mapped : (active ?? primary)),
     adapter,
+    adapterContext: activeContext,
     capabilities,
     reason,
     mappedLabel: mapping?.label,
