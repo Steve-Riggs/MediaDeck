@@ -19,7 +19,9 @@ export function getArtworkMedia(entity?: HassEntity): ArtworkMedia | undefined {
   const title = series ?? text(a.media_title);
   if (!title || isAppTitle(title) || title.toLowerCase() === appName(a.app_name).toLowerCase())
     return undefined;
-  const contentType = text(a.media_content_type);
+  const contentType = text(a.media_content_type)?.toLowerCase();
+  if (contentType && !['movie', 'episode', 'tvshow', 'tv', 'video'].includes(contentType))
+    return undefined;
   const kind =
     series || ['episode', 'tvshow', 'tv'].includes(contentType ?? '')
       ? 'tv'

@@ -97,6 +97,19 @@ test('lookup failures return a status without leaking credential URLs', async ()
   expect(result.message).not.toContain('secret');
   expect(result.message).toContain('unavailable');
 });
+test.each(['music', 'playlist', 'podcast', 'channel', 'image'])(
+  '%s metadata is excluded from film artwork lookup',
+  (media_content_type) => {
+    expect(
+      getArtworkMedia(
+        entity('media_player.tv', 'playing', {
+          media_title: 'Yesterday',
+          media_content_type,
+        }),
+      ),
+    ).toBeUndefined();
+  },
+);
 test('app-only metadata is never used as a movie search query', () => {
   expect(
     getArtworkMedia(
