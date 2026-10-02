@@ -1,4 +1,4 @@
-import { LitElement, html, nothing } from 'lit';
+import { LitElement, html, nothing, type PropertyValues } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import type { HomeAssistant } from './types/home-assistant';
 import type { MediaDeckConfig, NormalizedMediaDeckConfig, RegionName } from './config/types';
@@ -7,6 +7,7 @@ import { validateConfig } from './config/validate';
 import { resolveMediaSession } from './session/resolve-session';
 import { executeIntent } from './actions/router';
 import type { MediaIntent } from './actions/types';
+import { loadEntityRegistry, type EntityRegistryMap } from './registry/entity-registry';
 import { renderNowPlaying } from './ui/now-playing';
 import { renderTransportControls } from './ui/transport-controls';
 import { renderRemoteControls } from './ui/remote-controls';
@@ -22,6 +23,31 @@ export class MediaDeckCard extends LitElement {
   @property({ attribute: false }) hass?: HomeAssistant;
   @state() private config?: NormalizedMediaDeckConfig;
   @state() private actionError?: string;
+  @state() private registry: EntityRegistryMap = {};
+  @state() private volumeDraft?: number;
+  private registrySource?: HomeAssistant;
+  private progressTimer?: number;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.progressTimer = window.setInterval(() => this.requestUpdate(), 1000);
+  }
+
+  disconnectedCallback() {
+    if (this.progressTimer !== undefined) window.clearInterval(this.progressTimer);
+    this.progressTimer = undefined;
+    super.disconnectedCallback();
+  }
+
+  protected willUpdate(changed: PropertyValues<this>) {
+    if (changed.has('hass') && this.hass && this.registrySource !== this.hass) {
+      const source = this.hass;
+      this.registrySource = source;
+      void loadEntityRegistry(source).then((registry) => {
+        if (this.registrySource === source) this.registry = registry;
+      });
+    }
+  }
 
   setConfig(config: MediaDeckConfig) {
     const validation = validateConfig(config);
@@ -30,13 +56,18 @@ export class MediaDeckCard extends LitElement {
   }
 
   getCardSize() {
-    return this.config?.appearance.density === 'compact' ? 5 : 7;
+    return this.config?.appearance.density === 'compact'
+      ? 5
+      : this.config?.appearance.density === 'expanded'
+        ? 9
+        : 7;
   }
 
   getGridOptions() {
+    const density = this.config?.appearance.density;
     return {
       columns: 12,
-      rows: this.config?.appearance.density === 'compact' ? 5 : 7,
+      rows: density === 'compact' ? 5 : density === 'expanded' ? 9 : 7,
       min_columns: 4,
       min_rows: 3,
     };
@@ -58,9 +89,16 @@ export class MediaDeckCard extends LitElement {
 
   private async run(intent: MediaIntent) {
     if (!this.hass || !this.config) return;
+    if (
+      intent.kind === 'custom' &&
+      intent.action.confirmation &&
+      !window.confirm(intent.action.confirmation)
+    )
+      return;
+
     const result = await executeIntent(
       this.hass,
-      resolveMediaSession(this.hass, this.config),
+      resolveMediaSession(this.hass, this.config, this.registry),
       intent,
     );
     this.actionError = result.ok ? undefined : (result.message ?? 'Media action failed.');
@@ -70,7 +108,7 @@ export class MediaDeckCard extends LitElement {
     if (!this.config?.regions[region]) return nothing;
     switch (region) {
       case 'now_playing':
-        return renderNowPlaying(session, this.config);
+        return renderNowPlaying(session, this.config, (intent) => void this.run(intent));
       case 'transport':
         return renderTransportControls(session, (intent) => void this.run(intent));
       case 'remote':
@@ -78,7 +116,14 @@ export class MediaDeckCard extends LitElement {
       case 'sources':
         return renderSourceSelector(session, (intent) => void this.run(intent));
       case 'audio':
-        return renderAudioControls(session, (intent) => void this.run(intent));
+        return renderAudioControls(
+          session,
+          (intent) => void this.run(intent),
+          this.volumeDraft,
+          (value) => {
+            this.volumeDraft = value;
+          },
+        );
       case 'watch_actions':
         return renderWatchActions(this.config, (intent) => void this.run(intent));
       case 'inspector':
@@ -97,7 +142,7 @@ export class MediaDeckCard extends LitElement {
       </div>`;
     }
 
-    const session = resolveMediaSession(this.hass, this.config);
+    const session = resolveMediaSession(this.hass, this.config, this.registry);
     const appearance = this.config.appearance;
     const style = [
       `--mediadeck-min-height:${appearance.min_height}px`,
@@ -114,9 +159,8 @@ export class MediaDeckCard extends LitElement {
       `--mediadeck-gap:${appearance.gap}px`,
       `opacity:${appearance.opacity}`,
     ].join(';');
-    const primaryRegions: RegionName[] = ['now_playing', 'transport'];
 
-    return html`<article class="card" style=${style}>
+    return html`<article class=${`card density-${appearance.density}`} style=${style}>
       <header class="header">
         <h1>${this.config.title ?? primary.attributes.friendly_name ?? 'MediaDeck'}</h1>
         <div>
@@ -127,16 +171,10 @@ export class MediaDeckCard extends LitElement {
         </div>
       </header>
       <div class="card-body">
-        <div>
-          ${this.config.section_order
-            .filter((region) => primaryRegions.includes(region))
-            .map((region) => this.section(region, session))}
-        </div>
-        <div>
-          ${this.config.section_order
-            .filter((region) => !primaryRegions.includes(region))
-            .map((region) => this.section(region, session))}
-        </div>
+        ${this.config.section_order.map(
+          (region) =>
+            html`<div class=${`region region-${region}`}>${this.section(region, session)}</div>`,
+        )}
       </div>
       ${this.actionError
         ? html`<div class="error" role="status">${this.actionError}</div>`

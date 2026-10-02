@@ -14,8 +14,10 @@ const COMMANDS: Record<NavigationCommand, string> = {
 export const lgWebosAdapter: PlatformAdapter = {
   id: 'lg-webos',
   name: 'LG webOS',
-  matches: ({ entity }) => {
+  matches: ({ entity, registryPlatform, remoteRegistryPlatform }) => {
     const text = [
+      registryPlatform,
+      remoteRegistryPlatform,
       entity?.entity_id,
       entity?.attributes.integration,
       entity?.attributes.manufacturer,

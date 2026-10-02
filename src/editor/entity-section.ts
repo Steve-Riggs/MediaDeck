@@ -1,17 +1,33 @@
 import { html, type TemplateResult } from 'lit';
 import type { MediaDeckConfig } from '../config/types';
+import type { PlatformId } from '../platforms/types';
 import type { HomeAssistant, HassEntity } from '../types/home-assistant';
+import {
+  entityOptionLabel,
+  uniqueEntities,
+  type EntityRegistryMap,
+} from '../registry/entity-registry';
+
+const PLATFORM_OPTIONS: Array<[PlatformId | '', string]> = [
+  ['', 'Automatic'],
+  ['generic', 'Generic media player'],
+  ['android-tv', 'Android / Google TV'],
+  ['apple-tv', 'Apple TV'],
+  ['samsung-tv', 'Samsung TV'],
+  ['lg-webos', 'LG webOS'],
+];
 
 export function renderEntitySection(
   hass: HomeAssistant,
   config: MediaDeckConfig,
   replace: (config: MediaDeckConfig) => void,
+  registry: EntityRegistryMap = {},
 ): TemplateResult {
-  const media = Object.values(hass.states).filter((entity) =>
-    entity.entity_id.startsWith('media_player.'),
+  const media = uniqueEntities(
+    Object.values(hass.states).filter((entity) => entity.entity_id.startsWith('media_player.')),
   );
-  const remotes = Object.values(hass.states).filter((entity) =>
-    entity.entity_id.startsWith('remote.'),
+  const remotes = uniqueEntities(
+    Object.values(hass.states).filter((entity) => entity.entity_id.startsWith('remote.')),
   );
   const roles = config.entities ?? {};
   const select = (
@@ -22,14 +38,13 @@ export function renderEntitySection(
   ) =>
     html`<label
       >${label}<select
-        .value=${value ?? ''}
         @change=${(event: Event) => onChange((event.target as HTMLSelectElement).value)}
       >
-        <option value="">None</option>
+        <option value="" ?selected=${!value}>None</option>
         ${entities.map(
           (entity) =>
-            html`<option value=${entity.entity_id}>
-              ${entity.attributes.friendly_name ?? entity.entity_id}
+            html`<option value=${entity.entity_id} ?selected=${value === entity.entity_id}>
+              ${entityOptionLabel(hass, entity, registry)}
             </option>`,
         )}
       </select></label
@@ -40,6 +55,22 @@ export function renderEntitySection(
     ${select('Primary media entity', config.entity, media, (entity) =>
       replace({ ...config, entity }),
     )}
+    <label
+      >Platform
+      <select
+        @change=${(event: Event) => {
+          const platform = (event.target as HTMLSelectElement).value as PlatformId | '';
+          replace({ ...config, platform: platform || undefined });
+        }}
+      >
+        ${PLATFORM_OPTIONS.map(
+          ([value, label]) =>
+            html`<option value=${value} ?selected=${(config.platform ?? '') === value}>
+              ${label}
+            </option>`,
+        )}
+      </select>
+    </label>
     ${select('Metadata entity', roles.metadata, media, (metadata) =>
       replace({ ...config, entities: { ...roles, metadata: metadata || undefined } }),
     )}
@@ -69,9 +100,9 @@ export function renderEntitySection(
             (entity) =>
               html`<option
                 value=${entity.entity_id}
-                .selected=${roles.related?.includes(entity.entity_id) ?? false}
+                ?selected=${roles.related?.includes(entity.entity_id) ?? false}
               >
-                ${entity.attributes.friendly_name ?? entity.entity_id}
+                ${entityOptionLabel(hass, entity, registry)}
               </option>`,
           )}
       </select>

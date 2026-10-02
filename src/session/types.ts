@@ -1,5 +1,5 @@
 import type { HassEntity } from '../types/home-assistant';
-import type { MediaCapabilities, PlatformAdapter } from '../platforms/types';
+import type { AdapterContext, MediaCapabilities, PlatformAdapter } from '../platforms/types';
 export type MediaDeckSystemState =
   | 'off'
   | 'idle'
@@ -17,6 +17,7 @@ export interface ResolvedMediaSession {
   source?: string;
   state: MediaDeckSystemState;
   adapter: PlatformAdapter;
+  adapterContext: AdapterContext;
   capabilities: MediaCapabilities;
   reason: string;
   mappedLabel?: string;

@@ -1,3 +1,5 @@
+import type { PlatformId } from '../platforms/types';
+
 export const MEDIADECK_SCHEMA_VERSION = 1;
 export type Density = 'compact' | 'standard' | 'expanded';
 export type RegionName =
@@ -21,6 +23,7 @@ export interface SourceMapping {
   audio_entity?: string;
   label?: string;
   icon?: string;
+  platform?: PlatformId;
 }
 export interface EntityRoles {
   metadata?: string;
@@ -58,6 +61,7 @@ export interface MediaDeckConfig {
   type: 'custom:mediadeck-card';
   entity: string;
   schema_version?: number;
+  platform?: PlatformId;
   entities?: EntityRoles;
   source_mappings?: Record<string, SourceMapping>;
   watch_actions?: WatchAction[];
