@@ -19,8 +19,10 @@ const COMMANDS: Record<NavigationCommand, string> = {
 export const samsungTvAdapter: PlatformAdapter = {
   id: 'samsung-tv',
   name: 'Samsung TV',
-  matches: ({ entity }) => {
+  matches: ({ entity, registryPlatform, remoteRegistryPlatform }) => {
     const text = [
+      registryPlatform,
+      remoteRegistryPlatform,
       entity?.entity_id,
       entity?.attributes.integration,
       entity?.attributes.manufacturer,
@@ -29,7 +31,7 @@ export const samsungTvAdapter: PlatformAdapter = {
       .filter(Boolean)
       .join(' ')
       .toLowerCase();
-    return /samsung/.test(text);
+    return /samsung|samsungtv/.test(text);
   },
   capabilities: (context) => ({
     ...genericCapabilities(context),
