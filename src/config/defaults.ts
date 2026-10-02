@@ -48,6 +48,7 @@ export function normalizeConfig(input: MediaDeckConfig): NormalizedMediaDeckConf
     source_mappings: { ...(input.source_mappings ?? {}) },
     watch_actions: [...(input.watch_actions ?? [])],
     custom_actions: { ...(input.custom_actions ?? {}) },
+    power_actions: { ...(input.power_actions ?? {}) },
     regions: { ...DEFAULT_REGIONS, ...(input.regions ?? {}) },
     section_order: [...(input.section_order ?? DEFAULT_SECTION_ORDER)],
     appearance: { ...DEFAULT_APPEARANCE, ...(input.appearance ?? {}) },
