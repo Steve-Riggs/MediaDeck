@@ -67,12 +67,9 @@ export class MediaDeckCard extends LitElement {
   }
 
   getGridOptions() {
-    const density = this.config?.appearance.density;
     return {
       columns: 12,
-      rows: density === 'compact' ? 5 : density === 'expanded' ? 9 : 7,
       min_columns: 4,
-      min_rows: 3,
     };
   }
 
