@@ -27,9 +27,9 @@ describe('v0.1.2 editor bootstrap regression', () => {
     const primary = selectForLabel(editor.shadowRoot, 'Primary media entity');
     expect(primary).toBeDefined();
     expect(primary?.value).toBe('');
-    expect([...primary!.options].some((option) => option.value === 'media_player.sitting_room_tv')).toBe(
-      true,
-    );
+    expect(
+      [...primary!.options].some((option) => option.value === 'media_player.sitting_room_tv'),
+    ).toBe(true);
   });
 
   test('brand-new stub preview is editable instead of throwing a configuration error', async () => {
