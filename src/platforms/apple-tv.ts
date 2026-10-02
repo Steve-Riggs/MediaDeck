@@ -19,8 +19,10 @@ const COMMANDS: Record<NavigationCommand, string> = {
 export const appleTvAdapter: PlatformAdapter = {
   id: 'apple-tv',
   name: 'Apple TV',
-  matches: ({ entity }) => {
+  matches: ({ entity, registryPlatform, remoteRegistryPlatform }) => {
     const text = [
+      registryPlatform,
+      remoteRegistryPlatform,
       entity?.entity_id,
       entity?.attributes.integration,
       entity?.attributes.platform,
@@ -34,7 +36,7 @@ export const appleTvAdapter: PlatformAdapter = {
   },
   capabilities: (context) => ({
     ...genericCapabilities(context),
-    remoteNavigation: Boolean(context.remote),
+    remoteNavigation: Boolean(context.remote && context.remote.state !== 'unavailable'),
   }),
   remoteAction: (context, command) => remoteSendCommand(context, COMMANDS[command]),
 };
