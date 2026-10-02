@@ -1,4 +1,5 @@
 import type { HassEntity } from '../types/home-assistant';
+import type { PowerActions } from '../config/types';
 import type { AdapterContext, MediaCapabilities, PlatformAdapter } from '../platforms/types';
 export type MediaDeckSystemState =
   | 'off'
@@ -9,6 +10,8 @@ export type MediaDeckSystemState =
   | 'unknown';
 export interface ResolvedMediaSession {
   primary?: HassEntity;
+  power?: HassEntity;
+  powerActions: PowerActions;
   active?: HassEntity;
   metadata?: HassEntity;
   transport?: HassEntity;
