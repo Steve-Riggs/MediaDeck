@@ -162,7 +162,7 @@ All appearance values are optional; Home Assistant theme variables are used by d
 
 ## Privacy
 
-MediaDeck runs entirely in the Home Assistant frontend using the authenticated connection already available to dashboard cards. It has no cloud backend, telemetry, API keys, long-lived tokens or third-party state/configuration upload.
+MediaDeck runs entirely in the Home Assistant frontend using the authenticated connection already available to dashboard cards. It has no cloud backend or telemetry. The default Home Assistant artwork mode needs no API keys or external requests. Optional artwork lookup providers use dashboard-configured API keys and send programme titles or content IDs to those services, as described below.
 
 ## Development
 
